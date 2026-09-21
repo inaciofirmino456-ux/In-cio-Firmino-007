@@ -215,7 +215,7 @@ export default function App() {
       {mobileMenu && <nav className="grid gap-1 border-t border-stone-200 bg-white p-3 md:hidden">
         {[
           ["/ranking","Ranking"],["/categories","Categorias"],["/how-it-works","Como funciona"],
-          ["/faq","FAQ"],["/rules","Regras"],["/dashboard","Dashboard"],["/wallet","Carteira"],["/admin","Admin"]
+          ["/faq","FAQ"],["/rules","Regras"],["/dashboard","Dashboard"],["/wallet","Carteira"]
         ].map(([href,label]) => <button key={href} onClick={() => navigate(href)} className="rounded-xl px-4 py-3 text-left font-semibold hover:bg-stone-50">{label}</button>)}
       </nav>}
     </header>
