@@ -35,7 +35,9 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
     "@types/express": "^4.17.21",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4"
   },
   "description": "Production pay-to-rank leaderboard"
 }
