@@ -23,6 +23,20 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return data;
 }
 
+export async function startPaymentSession(orderId: string, provider: "binance_pay" | "nowpayments"): Promise<PaymentSession> {
+  const response = await fetch(functionsBase() + "/payment-session", { method: "POST", headers: headers(), body: JSON.stringify({ orderId, provider }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Não foi possível iniciar o pagamento.");
+  return data;
+}
+
+export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
+  const response = await fetch(functionsBase() + "/crypto-payment-instructions", { method: "POST", headers: headers(), body: JSON.stringify({ orderId, network, asset }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Não foi possível preparar o pagamento crypto.");
+  return data;
+}
+
 export async function recordClick(listingId: string) {
   await fetch(functionsBase() + '/click', {
     method: 'POST',
