@@ -61,7 +61,7 @@ function relativeTime(value: string) {
   if (hours < 24) return hours + "h ago";
   return Math.floor(hours / 24) + "d ago";
 }
-function currentPath() { return window.location.pathname.replace(/\\/+$/, "") || "/"; }
+function currentPath() { return window.location.pathname.replace(/\/+$/, "") || "/"; }
 function slugLabel(slug: string) {
   return FALLBACK_CATEGORIES.find(([s]) => s === slug)?.[1] ?? slug.replaceAll("-", " ");
 }
