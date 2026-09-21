@@ -7,7 +7,6 @@ import {
   getDailyListings,
   getDailyDays,
   recordClick,
-  startPaymentSession,
   getCryptoInstructions,
   verifyCryptoPayment,
   getOrderStatus,
@@ -85,7 +84,6 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [order, setOrder] = useState<{ id: string; amount: number } | null>(null);
   const [paymentLoading, setPaymentLoading] = useState("");
-  const [paymentUrl, setPaymentUrl] = useState("");
   const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; address: string; expiresAt: string } | null>(null);
   const [txHash, setTxHash] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
@@ -136,7 +134,7 @@ export default function App() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setError(""); setOrder(null); setPaymentUrl(""); setCrypto(null); setTxHash(""); setPaymentStatus("");
+    setError(""); setOrder(null); setCrypto(null); setTxHash(""); setPaymentStatus("");
     const requested = Math.min(MAX_BID_USD, Math.max(MIN_BID_USD, Math.floor(Number(bid) || 1)));
     if (!url.trim()) return setError("Introduza a URL do site ou um @handle do X.");
     if (!category) return setError("Escolha uma categoria.");
@@ -147,19 +145,6 @@ export default function App() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível criar o pedido.");
     } finally { setCreating(false); }
-  }
-
-  async function pay(provider: "binance_pay" | "nowpayments" | "paygo") {
-    if (!order) return;
-    setPaymentLoading(provider); setError("");
-    try {
-      const result = await startPaymentSession(order.id, provider);
-      if (!result.checkoutUrl) throw new Error("O provedor não devolveu um checkout configurado.");
-      setPaymentUrl(result.checkoutUrl);
-      window.location.href = result.checkoutUrl;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Falha ao iniciar pagamento.");
-    } finally { setPaymentLoading(""); }
   }
 
   async function prepareCrypto(network: string, asset: string) {
@@ -268,21 +253,34 @@ export default function App() {
       {order && <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5">
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
         <p className="mt-2 text-sm text-stone-600">Escolha o método de pagamento. O ranking só muda depois da confirmação.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <button onClick={()=>pay("paygo")} disabled={!!paymentLoading} className="rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="paygo"?"A abrir...":"Cartão · PayGo"}</button>
-          <button onClick={()=>pay("binance_pay")} disabled={!!paymentLoading} className="rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="binance_pay"?"A abrir...":"Binance Pay"}</button>
-          <button onClick={()=>pay("nowpayments")} disabled={!!paymentLoading} className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold disabled:opacity-50">Crypto checkout</button>
-          <button onClick={()=>prepareCrypto("bitcoin","BTC")} disabled={!!paymentLoading} className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold disabled:opacity-50">Bitcoin</button>
-          <button onClick={()=>prepareCrypto("ethereum","USDT")} disabled={!!paymentLoading} className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold disabled:opacity-50">USDT · Ethereum</button>
+        <div className="mt-4">
+          <p className="text-sm font-bold">Pagar com Rabby Wallet</p>
+          <p className="mt-1 text-xs text-stone-500">Escolha a rede e o ativo. Envie exatamente o valor mostrado para o endereço de recebimento. O ranking só muda após a verificação on-chain.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["bitcoin","BTC","Bitcoin"],
+              ["solana","SOL","Solana"],
+              ["ethereum","ETH","Ethereum"],
+              ["ethereum","USDT","USDT · Ethereum"],
+              ["bsc","BNB","BNB · BNB Smart Chain"],
+              ["bsc","USDT","USDT · BNB Smart Chain"],
+              ["ethereum","USDC","USDC · Ethereum"],
+              ["bsc","USDC","USDC · BNB Smart Chain"]
+            ].map(([network,asset,label]) => (
+              <button key={network+asset} onClick={()=>prepareCrypto(network,asset)} disabled={!!paymentLoading}
+                className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-left disabled:opacity-50">
+                {paymentLoading===network+asset ? "A preparar..." : label}
+              </button>
+            ))}
+          </div>
         </div>
-        {paymentUrl && <a href={paymentUrl} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-orange-600">Abrir checkout <ExternalLink size={14}/></a>}
         {crypto && <div className="mt-4 rounded-xl bg-white p-4 text-sm">
           <div className="font-bold">{crypto.asset} · {crypto.network}</div><div className="mt-2 break-all font-mono text-xs">{crypto.address}</div><div className="mt-2 font-bold">Enviar exatamente: {crypto.amount}</div>
           <div className="mt-3"><input value={txHash} onChange={e=>setTxHash(e.target.value)} placeholder="Cole aqui o TX hash" className="w-full rounded-xl border border-stone-300 px-3 py-3 font-mono text-xs"/></div>
           <button onClick={confirmCrypto} disabled={paymentLoading==="verify"} className="mt-3 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="verify"?"A verificar...":"Verificar pagamento"}</button>
           <p className="mt-2 text-xs text-stone-500">O servidor verifica rede, ativo, destinatário, valor e confirmações antes de alterar o ranking.</p>
         </div>}
-        {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
+{paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
       <p className="mt-4 flex items-center gap-2 text-xs text-stone-500"><ShieldCheck size={14}/> Pagamentos e ranking são validados no servidor.</p>
     </section>
