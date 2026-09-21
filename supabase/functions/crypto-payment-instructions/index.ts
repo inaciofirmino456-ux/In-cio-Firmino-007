@@ -2,59 +2,60 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
 const NETWORKS = new Set(["bitcoin","solana","ethereum","bsc","robinhood_chain"]);
+const ASSETS = new Set(["BTC","SOL","ETH","BNB","USDT","USDC"]);
+const DECIMALS: Record<string,number> = {BTC:8,SOL:9,ETH:18,BNB:18,USDT:6,USDC:6};
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+function json(v:unknown,status=200){return new Response(JSON.stringify(v),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 
-  try {
-    const body = await req.json();
-    const orderId = String(body?.orderId || "");
-    const network = String(body?.network || "").toLowerCase();
-    const asset = String(body?.asset || "").toUpperCase();
+async function usdRate(asset:string){
+  if(asset==="USDT"||asset==="USDC") return 1;
+  const ids:Record<string,string>={BTC:"bitcoin",SOL:"solana",ETH:"ethereum",BNB:"binancecoin"};
+  const id=ids[asset]; if(!id) throw new Error("UNSUPPORTED_ASSET");
+  const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids="+id+"&vs_currencies=usd");
+  if(!r.ok) throw new Error("PRICE_ORACLE_UNAVAILABLE");
+  const j=await r.json(); const p=Number(j?.[id]?.usd);
+  if(!Number.isFinite(p)||p<=0) throw new Error("INVALID_PRICE");
+  return p;
+}
 
-    if (!orderId || !NETWORKS.has(network)) {
-      throw new Error("INVALID_ORDER_OR_NETWORK");
-    }
+Deno.serve(async(req)=>{
+  if(req.method==="OPTIONS") return new Response("ok",{headers:corsHeaders});
+  try{
+    const body=await req.json();
+    const orderId=String(body?.orderId||"");
+    const network=String(body?.network||"").toLowerCase();
+    const asset=String(body?.asset||"").toUpperCase();
+    if(!orderId||!NETWORKS.has(network)||!ASSETS.has(asset)) return json({error:"INVALID_ORDER_OR_ASSET"},400);
 
-    const sb = adminClient();
+    const compatible =
+      (network==="bitcoin" && asset==="BTC") ||
+      (network==="solana" && ["SOL","USDT","USDC"].includes(asset)) ||
+      (["ethereum","bsc","robinhood_chain"].includes(network) && ["ETH","BNB","USDT","USDC"].includes(asset));
+    if(!compatible) return json({error:"ASSET_NOT_SUPPORTED_ON_NETWORK"},400);
 
-    const { data: order, error: orderError } = await sb
-      .from("orders")
-      .select("id,charge_cents,status,expires_at")
-      .eq("id", orderId)
-      .single();
+    const sb=adminClient();
+    const {data:order,error:oe}=await sb.from("orders").select("id,charge_cents,status,expires_at").eq("id",orderId).single();
+    if(oe||!order) return json({error:"ORDER_NOT_FOUND"},404);
+    if(order.status!=="pending") return json({error:"ORDER_NOT_PAYABLE"},409);
+    if(order.expires_at && new Date(order.expires_at).getTime()<=Date.now()) return json({error:"ORDER_EXPIRED"},409);
 
-    if (orderError || !order) throw new Error("ORDER_NOT_FOUND");
-    if (order.status !== "pending") throw new Error("ORDER_NOT_PAYABLE");
-    if (order.expires_at && new Date(order.expires_at).getTime() <= Date.now()) {
-      throw new Error("ORDER_EXPIRED");
-    }
+    const {data:receiver,error:re}=await sb.from("payment_receiving_addresses").select("network,address").eq("network",network).eq("active",true).single();
+    if(re||!receiver) return json({error:"NETWORK_NOT_CONFIGURED"},400);
 
-    const { data: receiver, error: receiverError } = await sb
-      .from("payment_receiving_addresses")
-      .select("network,address")
-      .eq("network", network)
-      .eq("active", true)
-      .single();
+    const rate=await usdRate(asset);
+    const amountUsd=Number(order.charge_cents)/100;
+    const expectedAmount=amountUsd/rate;
+    const decimals=DECIMALS[asset];
+    const expectedUnits=Math.ceil(expectedAmount*(10**decimals));
+    const expiresAt=order.expires_at||new Date(Date.now()+30*60*1000).toISOString();
 
-    if (receiverError || !receiver) throw new Error("NETWORK_NOT_CONFIGURED");
+    const {error:qe}=await sb.from("crypto_payment_quotes").upsert({
+      order_id:order.id,network,asset,recipient_address:receiver.address,
+      rate_usd:rate,expected_amount:expectedAmount,expected_units:expectedUnits.toString(),
+      decimals,expires_at:expiresAt
+    },{onConflict:"order_id,network,asset"});
+    if(qe) return json({error:"QUOTE_SAVE_FAILED",detail:qe.message},500);
 
-    return new Response(JSON.stringify({
-      orderId: order.id,
-      network,
-      asset,
-      amountUsd: Number(order.charge_cents) / 100,
-      receivingAddress: receiver.address,
-      status: "awaiting_payment_confirmation"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({
-      error: e instanceof Error ? e.message : "crypto_payment_instructions_failed"
-    }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
+    return json({orderId:order.id,network,asset,amountUsd,rateUsd:rate,expectedAmount,expectedUnits:String(expectedUnits),decimals,receivingAddress:receiver.address,expiresAt,status:"awaiting_payment"});
+  }catch(e){return json({error:e instanceof Error?e.message:"CRYPTO_PAYMENT_SETUP_FAILED"},400)}
 });
