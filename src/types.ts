@@ -1,42 +1,18 @@
-export type Category = 
-  | 'All'
-  | 'AI & Tech'
-  | 'SaaS & Tools'
-  | 'Dev & Open Source'
-  | 'Crypto & Web3'
-  | 'Design & Creative'
-  | 'Indie Makers'
-  | 'Other';
-
 export interface Listing {
   id: string;
+  normalized_url: string;
+  canonical_url: string;
   title: string;
-  url: string;
-  tagline: string;
-  category: Exclude<Category, 'All'>;
-  currentBid: number; // in USD
-  previousBid?: number;
-  totalBidsCount: number;
+  description: string;
+  domain: string;
+  category_id: string;
+  total_paid_cents: number;
+  created_at: string;
+  updated_at: string;
   clicks: number;
-  createdAt: number; // timestamp
-  updatedAt: number; // timestamp
-  iconUrl?: string;
-  verified?: boolean;
+  status: 'active' | 'removed';
+  category?: { name: string; slug: string };
 }
 
-export interface ActivityEvent {
-  id: string;
-  timestamp: number;
-  type: 'new_listing' | 'outbid' | 'increased_bid';
-  listingTitle: string;
-  listingUrl: string;
-  bidAmount: number;
-  rankAchieved: number;
-}
-
-export interface StatsSummary {
-  totalRevenue: number;
-  activeListingsCount: number;
-  totalClicks: number;
-  topBid: number;
-}
+export interface CategoryRecord { id: string; slug: string; name: string; }
+export interface Order { orderId: string; amountUsd: number; requestedTotalUsd: number; canonicalUrl: string; domain: string; }
