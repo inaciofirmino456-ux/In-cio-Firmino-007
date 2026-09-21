@@ -1,0 +1,33 @@
+-- TopBid category catalog aligned with the current public outbid.lol category set.
+insert into public.categories (slug, name)
+values
+('ai-agents-infrastructure','AI Agents & Infrastructure'),
+('seo-ai-visibility','SEO & AI Visibility'),
+('marketing-advertising','Marketing & Advertising'),
+('analytics','Analytics'),
+('crypto-web3-investing','Crypto, Web3 & Investing'),
+('developer-tools','Developer Tools'),
+('business-finance-legal','Business, Finance & Legal'),
+('security-privacy-compliance','Security, Privacy & Compliance'),
+('health-fitness-wellness','Health, Fitness & Wellness'),
+('social-media-creator-tools','Social Media & Creator Tools'),
+('leaderboards-attention-markets','Leaderboards & Attention Markets'),
+('hiring-jobs-careers','Hiring, Jobs & Careers'),
+('education-learning','Education & Learning'),
+('agencies-studios-services','Agencies, Studios & Services'),
+('ecommerce-retail','Ecommerce & Retail'),
+('domains-web-assets','Domains & Web Assets'),
+('games-entertainment','Games & Entertainment'),
+('people-profiles','People & Profiles'),
+('productivity-personal-tools','Productivity & Personal Tools'),
+('design-creative','Design & Creative'),
+('writing-content','Writing & Content'),
+('directories-launch-discovery','Directories, Launch & Discovery'),
+('ai-media-generation','AI Media Generation'),
+('audio-voice-podcasting','Audio, Voice & Podcasting'),
+('sales-lead-generation','Sales & Lead Generation'),
+('travel-local-lifestyle','Travel, Local & Lifestyle'),
+('real-estate-property','Real Estate & Property'),
+('media-news','Media & News'),
+('other','Other')
+on conflict (slug) do update set name=excluded.name;
