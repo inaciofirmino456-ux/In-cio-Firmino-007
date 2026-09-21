@@ -105,7 +105,7 @@ export default function App() {
             <article key={item.id} className="grid gap-3 border-b border-stone-100 px-5 py-5 sm:grid-cols-[70px_1fr_auto] sm:items-center">
               <div className="text-lg font-black text-stone-400">#{index+1}</div>
               <div className="min-w-0"><a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={()=>recordClick(item.id)} className="inline-flex items-center gap-1 font-bold hover:text-orange-600">{item.title}<ExternalLink size={13}/></a><p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p><div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div></div>
-              <div className="text-right"><div className="text-xl font-black">{money(item.total_paid_cents)}</div><button onClick={()=>{setUrl(item.canonical_url);setBid(item.total_paid_cents/100+1);window.scrollTo({top:0,behavior:'smooth'});}} className="text-xs font-bold text-orange-600">Claim this rank for {money(item.total_paid_cents+100)}</button></div>
+              <div className="text-right"><div className="text-xl font-black">{money(item.total_paid_cents)}</div><button onClick={()=>{setUrl(item.canonical_url);setBid(item.total_paid_cents/100+(index===0?TOP_RANK_INCREMENT_USD:1));window.scrollTo({top:0,behavior:'smooth'});}} className="text-xs font-bold text-orange-600">Claim this rank for {money(item.total_paid_cents+(index===0?TOP_RANK_INCREMENT_USD*100:100))}</button></div>
             </article>
           ))}
         </section>
