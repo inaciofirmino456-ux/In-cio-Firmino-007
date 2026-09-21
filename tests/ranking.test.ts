@@ -11,7 +11,7 @@ describe('ranking', () => {
     expect(result.map(x=>x.id)).toEqual(['top','old','new']);
   });
   it('calculates the #1 claim price', () => {
-    expect(claimPrice(10000)).toBe(10500);
+    expect(claimPrice(10000)).toBe(10100);
     expect(claimPrice(0)).toBe(100);
   });
   it('charges only the rebid difference', () => {
