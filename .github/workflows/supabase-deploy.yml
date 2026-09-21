@@ -33,6 +33,4 @@ jobs:
           supabase functions deploy verify-crypto-payment --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy create-order --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy order-status --project-ref "$SUPABASE_PROJECT_REF"
-          supabase functions deploy payment-session --project-ref "$SUPABASE_PROJECT_REF"
-          supabase functions deploy payment-webhook --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy click --project-ref "$SUPABASE_PROJECT_REF"
