@@ -70,10 +70,7 @@ Deno.serve(async(req)=>{
     const amountUsd=Number(order.charge_cents)/100;
     const origin=Deno.env.get("PUBLIC_APP_ORIGIN")||"";
     let result;
-    if(provider==="binance_pay") result=await binanceCreate(orderId,amountUsd,origin);
-    else if(provider==="nowpayments") result=await nowCreate(orderId,amountUsd,origin+"/payment");
-    else throw new Error("PROVIDER_NOT_CONFIGURED");
-    await sb.from("orders").update({provider:result.provider,provider_payment_id:result.providerPaymentId,updated_at:new Date().toISOString()}).eq("id",orderId);
+    if(provider==="binance_pay") result=await binanceCreate(orderId,amountUsd,origin);\n    else if(provider==="nowpayments") result=await nowCreate(orderId,amountUsd,origin+"/payment");\n    else if(provider==="paygo") {\n      const template=Deno.env.get("PAYGO_CHECKOUT_URL");\n      if(!template) throw new Error("PAYGO_NOT_CONFIGURED");\n      const checkoutUrl=template.replaceAll("{order_id}",encodeURIComponent(orderId)).replaceAll("{amount}",encodeURIComponent(String(amountUsd)));\n      result={provider:"paygo",providerPaymentId:orderId,checkoutUrl};\n    }\n    else throw new Error("PROVIDER_NOT_CONFIGURED");\n    await sb.from("orders").update({provider:result.provider,provider_payment_id:result.providerPaymentId,updated_at:new Date().toISOString()}).eq("id",orderId);
     return new Response(JSON.stringify(result),{headers:{...corsHeaders,"Content-Type":"application/json"}});
   }catch(e){return new Response(JSON.stringify({error:e instanceof Error?e.message:"payment_session_failed"}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});}
 });
