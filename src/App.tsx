@@ -312,7 +312,7 @@ export default function App() {
         {dailyDays.length === 0 ? <span className="text-sm text-stone-500">Ainda não existem dias arquivados.</span> : dailyDays.map(day =>
           <button key={day} onClick={async()=>{setSelectedDay(day); try{setDailyListings(await getDailyListings(day) as Listing[])}catch(e){setError(e instanceof Error?e.message:"Falha ao carregar o dia.")}}}
             className={selectedDay===day?"rounded-xl bg-stone-950 px-3 py-2 text-xs font-bold text-white":"rounded-xl border px-3 py-2 text-xs font-bold"}>
-            day
+            {day}
           </button>
         )}
       </div>}
