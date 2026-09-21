@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, Flame, Loader2, ShieldCheck } from "lucide-react";
 import { createOrder, getCategories, getListings, recordClick, startPaymentSession, getCryptoInstructions } from "./lib/api";
 import { supabase } from "./lib/supabase";
@@ -142,7 +142,7 @@ export default function App() {
     </header>
   );
 
-  const InfoPage = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  const InfoPage = ({ title, children }: { title: string; children: ReactNode }) => (
     <><Header /><main className="mx-auto max-w-4xl px-4 py-10"><button onClick={() => navigate("/")} className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-orange-600"><ArrowLeft size={16} /> Back</button><section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-10"><h1 className="text-3xl font-black">{title}</h1><div className="mt-6 space-y-5 text-sm leading-7 text-stone-600">{children}</div></section></main></>
   );
 
