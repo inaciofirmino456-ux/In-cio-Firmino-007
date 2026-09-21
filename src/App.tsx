@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowRight, ExternalLink, Flame, Loader2, ShieldCheck } from 'lucide-react';
 import { createOrder, getCategories, getListings, recordClick } from './lib/api';
 import { supabase } from './lib/supabase';
@@ -54,7 +54,7 @@ export default function App() {
     return index < 0 ? listings.length + 1 : index + 1;
   }, [bid, listings]);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setOrder(null);
