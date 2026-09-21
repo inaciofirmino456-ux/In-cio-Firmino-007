@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.crypto-payment-instructions]
 verify_jwt = false
+
+[functions.verify-crypto-payment]
+verify_jwt = false
