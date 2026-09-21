@@ -77,7 +77,6 @@ export default function App() {
   const [dailyListings, setDailyListings] = useState<Listing[]>([]);
   const [dailyDays, setDailyDays] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().slice(0, 10));
-  const [dailyDays, setDailyDays] = useState<string[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("");
