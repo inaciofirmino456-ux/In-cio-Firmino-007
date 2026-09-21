@@ -43,7 +43,14 @@ export async function verifyCryptoPayment(orderId: string, network: string, asse
 }
 
 export async function getOrderStatus(orderId: string) {
-  return callFunction<{ status: string; amountUsd?: number; rank?: number }>('order-status', { orderId });
+  const base = functionsBase();
+  const response = await fetch(base + '/order-status?orderId=' + encodeURIComponent(orderId), {
+    method: 'GET',
+    headers: headers(),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Não foi possível consultar o pedido.');
+  return data as { status: string; amountUsd?: number; rank?: number };
 }
 
 export async function recordClick(listingId: string) {
