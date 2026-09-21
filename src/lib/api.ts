@@ -79,6 +79,19 @@ export async function getListings() {
   return data ?? [];
 }
 
+export async function getDailyListings(dayUtc: string) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('listing_daily_totals')
+    .select('listing_id,day_utc,paid_cents,first_payment_at,listing:listings(id,normalized_url,canonical_url,title,description,domain,category_id,total_paid_cents,created_at,updated_at,clicks,status,category:categories(name,slug))')
+    .eq('day_utc', dayUtc)
+    .order('paid_cents', { ascending: false })
+    .order('first_payment_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? [])
+    .filter((row: any) => row.listing && row.listing.status === 'active')
+    .map((row: any) => ({ ...row.listing, total_paid_cents: Number(row.paid_cents) }));
+}
+
 export interface PaymentSession {
   provider: string;
   providerPaymentId?: string;
