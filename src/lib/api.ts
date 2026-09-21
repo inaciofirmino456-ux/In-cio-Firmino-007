@@ -27,13 +27,6 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return callFunction<Order>('create-order', input);
 }
 
-export async function startPaymentSession(
-  orderId: string,
-  provider: 'binance_pay' | 'nowpayments' | 'paygo'
-): Promise<PaymentSession> {
-  return callFunction<PaymentSession>('payment-session', { orderId, provider });
-}
-
 export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
   return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
 }
@@ -97,12 +90,6 @@ export async function getDailyListings(dayUtc: string) {
   return (data ?? [])
     .filter((row: any) => row.listing && row.listing.status === 'active')
     .map((row: any) => ({ ...row.listing, total_paid_cents: Number(row.paid_cents) }));
-}
-
-export interface PaymentSession {
-  provider: string;
-  providerPaymentId?: string;
-  checkoutUrl?: string;
 }
 
 export interface CryptoInstructions {
