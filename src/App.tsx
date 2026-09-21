@@ -163,7 +163,7 @@ export default function App() {
     setPaymentLoading("verify"); setError(""); setPaymentStatus("");
     try {
       const result = await verifyCryptoPayment(order.id, crypto.network, crypto.asset, txHash.trim());
-      setPaymentStatus(result.status === "paid" ? "Pagamento confirmado. O ranking será atualizado." : (result.message || result.status));
+      setPaymentStatus(result.status === "paid" ? "Pagamento confirmado. O ranking será atualizado." : "Aguardando confirmação da transação...");
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "A transação ainda não foi confirmada.");
@@ -275,7 +275,8 @@ export default function App() {
           </div>
         </div>
         {crypto && <div className="mt-4 rounded-xl bg-white p-4 text-sm">
-          <div className="font-bold">{crypto.asset} · {crypto.network}</div><div className="mt-2 break-all font-mono text-xs">{crypto.address}</div><div className="mt-2 font-bold">Enviar exatamente: {crypto.amount}</div>
+          <div className="font-bold">{crypto.asset} · {crypto.network}</div><div className="mt-2 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
+          <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button><div className="mt-2 font-bold">Enviar exatamente: {crypto.amount}</div>
           <div className="mt-3"><input value={txHash} onChange={e=>setTxHash(e.target.value)} placeholder="Cole aqui o TX hash" className="w-full rounded-xl border border-stone-300 px-3 py-3 font-mono text-xs"/></div>
           <button onClick={confirmCrypto} disabled={paymentLoading==="verify"} className="mt-3 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="verify"?"A verificar...":"Verificar pagamento"}</button>
           <p className="mt-2 text-xs text-stone-500">O servidor verifica rede, ativo, destinatário, valor e confirmações antes de alterar o ranking.</p>
