@@ -1,8 +1,8 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
-const blockedHosts = /(^|\\.)((t\\.me)|(telegram\\.me)|(wa\\.me)|(whatsapp\\.com)|(discord\\.gg)|(discord\\.com)|(m\\.me)|(signal\\.org))$/i;
-const shorteners = /(^|\\.)(bit\\.ly|tinyurl\\.com|t\\.co|is\\.gd|cutt\\.ly|goo\\.gl)$/i;
+const blockedHosts = new Set(["t.me","telegram.me","wa.me","whatsapp.com","discord.gg","discord.com","m.me","signal.org"]);
+const shorteners = new Set(["bit.ly","tinyurl.com","t.co","is.gd","cutt.ly","goo.gl"]);
 
 function rejectPrivateHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -20,13 +20,15 @@ async function resolveUrl(raw: string) {
     if (!handle) throw new Error("invalid X handle");
     return { canonical: "https://x.com/" + handle, normalized: "x.com/" + handle.toLowerCase(), domain: "x.com", title: "@" + handle, description: "" };
   }
-  const original = new URL(/^https?:\\/\\//i.test(raw) ? raw : "https://" + raw);
+
+  const original = new URL(/^https?:\/\//i.test(raw) ? raw : "https://" + raw);
   if (!["http:","https:"].includes(original.protocol)) throw new Error("invalid protocol");
   rejectPrivateHost(original.hostname);
-  if (blockedHosts.test(original.hostname)) throw new Error("chat or invite links are not allowed");
+  const originalHost = original.hostname.toLowerCase();
+  if ([...blockedHosts].some(h => originalHost === h || originalHost.endsWith("." + h))) throw new Error("chat or invite links are not allowed");
 
   let finalUrl = original;
-  if (shorteners.test(original.hostname)) {
+  if (shorteners.has(originalHost)) {
     const response = await fetch(original.toString(), { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(8000) });
     finalUrl = new URL(response.url);
     rejectPrivateHost(finalUrl.hostname);
@@ -34,23 +36,21 @@ async function resolveUrl(raw: string) {
 
   finalUrl.hash = "";
   for (const key of [...finalUrl.searchParams.keys()]) finalUrl.searchParams.delete(key);
-  const path = finalUrl.pathname.replace(/\\/+$/, "") || "/";
-  const canonical = finalUrl.protocol + "//" + finalUrl.hostname.toLowerCase() + path;
+  const cleanPath = finalUrl.pathname.replace(/\/+$/, "") || "/";
+  const canonical = finalUrl.protocol + "//" + finalUrl.hostname.toLowerCase() + cleanPath;
 
   let title = finalUrl.hostname;
   let description = "";
   try {
     const response = await fetch(canonical, { redirect: "follow", signal: AbortSignal.timeout(8000), headers: { "user-agent": "TopBidMetadataBot/1.0" } });
     const html = (await response.text()).slice(0, 500_000);
-    const titleMatch = html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i);
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const descriptionMatch = html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]+content=["']([^"']*)["']/i);
-    if (titleMatch?.[1]) title = titleMatch[1].replace(/\\s+/g, " ").trim().slice(0, 160);
-    if (descriptionMatch?.[1]) description = descriptionMatch[1].replace(/\\s+/g, " ").trim().slice(0, 300);
-  } catch {
-    // Metadata is best-effort; payment/ranking does not depend on scraping success.
-  }
+    if (titleMatch?.[1]) title = titleMatch[1].replace(/\s+/g, " ").trim().slice(0, 160);
+    if (descriptionMatch?.[1]) description = descriptionMatch[1].replace(/\s+/g, " ").trim().slice(0, 300);
+  } catch {}
 
-  return { canonical, normalized: finalUrl.hostname.toLowerCase() + path, domain: finalUrl.hostname.toLowerCase(), title, description };
+  return { canonical, normalized: finalUrl.hostname.toLowerCase() + cleanPath, domain: finalUrl.hostname.toLowerCase(), title, description };
 }
 
 Deno.serve(async (req) => {
@@ -76,9 +76,7 @@ Deno.serve(async (req) => {
     });
     if (error) throw error;
     const created = Array.isArray(order) ? order[0] : order;
-    await sb.from("orders").update({
-      metadata: { title: target.title, description: target.description, domain: target.domain },
-    }).eq("id", created.id);
+    await sb.from("orders").update({ metadata: { title: target.title, description: target.description, domain: target.domain } }).eq("id", created.id);
 
     return new Response(JSON.stringify({
       orderId: created.id,
