@@ -16,7 +16,7 @@ import type { CategoryRecord, Listing } from "./types";
 
 const MIN_BID_USD = 1;
 const MAX_BID_USD = 999999;
-const TOP_RANK_INCREMENT_USD = 5;
+const TOP_RANK_INCREMENT_USD = 1;
 
 const FALLBACK_CATEGORIES = [
   ["ai-agents-infrastructure","AI Agents & Infrastructure"],
@@ -231,7 +231,7 @@ export default function App() {
             <p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div>
           </div>
-          <div className="flex items-center justify-between gap-4 sm:block sm:text-right"><div className="text-xl font-black">{money(item.total_paid_cents)}</div><button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+(index===0?5:1));navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+(index===0?500:100))}</button></div>
+          <div className="flex items-center justify-between gap-4 sm:block sm:text-right"><div className="text-xl font-black">{money(item.total_paid_cents)}</div><button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button></div>
         </article>
       )}
     </section>
@@ -259,7 +259,6 @@ export default function App() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["bitcoin","BTC","Bitcoin"],
-              ["solana","SOL","Solana"],
               ["ethereum","ETH","Ethereum"],
               ["ethereum","USDT","USDT · Ethereum"],
               ["bsc","BNB","BNB · BNB Smart Chain"],
@@ -288,7 +287,7 @@ export default function App() {
   );
 
   if (route === "/404") return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
-  if (route === "/rules") return <InfoPage title="Regras"><p>O ranking é público e a posição é determinada pelo valor confirmado.</p><p><strong>Valor mínimo:</strong> $1 para uma nova entrada. Para assumir o #1, o total deve ficar pelo menos $5 acima do atual #1.</p><p><strong>Empates:</strong> quando os valores são iguais, a entrada confirmada mais antiga permanece acima.</p><p><strong>Re-bid:</strong> usa a mesma URL ou @handle e paga apenas a diferença; o novo total deve superar o total atual em pelo menos $1.</p><p><strong>Conteúdo:</strong> sites de produtos e perfis X que o participante possui ou representa. Links de convite/chat, conteúdo adulto, afiliados e tracking não são aceites.</p><p><strong>Pagamento:</strong> uma posição só entra no ranking depois de confirmação real do pagamento. Pagamentos são finais e não reembolsáveis.</p></InfoPage>;
+  if (route === "/rules") return <InfoPage title="Regras"><p>O ranking é público e a posição é determinada pelo valor confirmado.</p><p><strong>Valor mínimo:</strong> $1 para uma nova entrada. Para assumir o #1, o total deve ficar pelo menos $1 acima do atual #1.</p><p><strong>Empates:</strong> quando os valores são iguais, a entrada confirmada mais antiga permanece acima.</p><p><strong>Re-bid:</strong> usa a mesma URL ou @handle e paga apenas a diferença; o novo total deve superar o total atual em pelo menos $1.</p><p><strong>Conteúdo:</strong> sites de produtos e perfis X que o participante possui ou representa. Links de convite/chat, conteúdo adulto, afiliados e tracking não são aceites.</p><p><strong>Pagamento:</strong> uma posição só entra no ranking depois de confirmação real do pagamento. Pagamentos são finais e não reembolsáveis.</p></InfoPage>;
   if (route === "/faq") return <InfoPage title="Perguntas frequentes"><p><strong>Preciso de conta?</strong><br/>Não para criar um pedido e pagar.</p><p><strong>Quando entro no ranking?</strong><br/>Somente depois da confirmação do pagamento pelo servidor.</p><p><strong>Posso subir a minha posição?</strong><br/>Sim. Envia novamente a mesma URL/@handle e paga apenas a diferença necessária.</p><p><strong>O que acontece se alguém pagar enquanto estou no checkout?</strong><br/>A posição é calculada no momento em que o pagamento é confirmado.</p></InfoPage>;
   if (route === "/how-it-works") return <InfoPage title="Como funciona"><ol className="list-decimal space-y-3 pl-5"><li>Introduz o site do produto ou um @handle do X.</li><li>Escolhe uma das categorias disponíveis.</li><li>Define um valor inteiro a partir de $1.</li><li>Cria o pedido e escolhe um método crypto disponível na Rabby Wallet.</li><li>O servidor verifica o pagamento.</li><li>Depois da confirmação, o valor pago é registado e a posição é calculada.</li><li>Quanto maior o total confirmado, mais acima fica a entrada.</li></ol></InfoPage>;
   if (route === "/categories") return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><h1 className="text-3xl font-black sm:text-4xl">Categorias</h1><p className="mt-2 text-stone-500">Cada categoria tem o seu próprio ranking.</p><div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{allCategories.map(c=><button key={c.id} onClick={()=>navigate("/category/"+c.slug)} className="rounded-2xl border border-stone-200 bg-white p-5 text-left font-bold shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300"><span>{c.name}</span><span className="mt-2 block text-xs font-normal text-stone-400">Ver ranking →</span></button>)}</div></main><Footer/></>;
