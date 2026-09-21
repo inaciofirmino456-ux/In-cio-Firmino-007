@@ -300,7 +300,10 @@ export default function App() {
   if (route === "/wallet") return <InfoPage title="Carteira"><p>Não existe carteira custodial nem saldo interno no TopBid.</p><p>Os pagamentos crypto são enviados diretamente para os endereços configurados e só entram no ranking depois da verificação da transação.</p><p><strong>Ativos/redes suportados pelo fluxo atual:</strong> Bitcoin, Solana, Ethereum, BNB Smart Chain e Robinhood Chain, conforme a configuração do servidor.</p></InfoPage>;
   if (route === "/admin") return <AdminPage navigate={navigate}/>;
 
-  const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/dashboard" || route === "/wallet" || route === "/admin" || route.startsWith("/category/");\n  if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;\n\n  return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10"><MainForm/><div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div></main><Footer/></div>;
+  const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/dashboard" || route === "/wallet" || route === "/admin" || route.startsWith("/category/");
+  if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
+
+  return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10"><MainForm/><div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div></main><Footer/></div>;
 }
 
 function AdminPage({navigate}:{navigate:(to:string)=>void}) {
