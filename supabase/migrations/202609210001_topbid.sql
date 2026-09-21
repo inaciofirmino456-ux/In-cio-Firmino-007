@@ -256,3 +256,16 @@ revoke all on public.listing_daily_totals from anon, authenticated;
 grant select on public.listings, public.categories, public.listing_daily_totals to anon, authenticated;
 grant execute on function public.create_order(text,text,uuid,bigint) to anon, authenticated;
 grant execute on function public.confirm_order_payment(uuid,public.provider_name,text,bigint,text,text,text,text,integer,jsonb) to service_role;
+
+
+create or replace function public.increment_listing_clicks(p_listing_id uuid)
+returns void
+language sql
+security definer
+set search_path=public
+as $$
+  update public.listings set clicks=clicks+1, updated_at=now()
+  where id=p_listing_id and status='active';
+$$;
+
+grant execute on function public.increment_listing_clicks(uuid) to service_role;
