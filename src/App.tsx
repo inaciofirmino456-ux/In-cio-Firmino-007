@@ -74,6 +74,7 @@ export default function App() {
   const [route, setRoute] = useState(currentPath());
   const [listings, setListings] = useState<Listing[]>([]);
   const [dailyListings, setDailyListings] = useState<Listing[]>([]);
+  const [dailyDays, setDailyDays] = useState<string[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("");
@@ -205,8 +206,6 @@ export default function App() {
           <button onClick={() => navigate("/how-it-works")}>Como funciona</button>
           <button onClick={() => navigate("/faq")}>FAQ</button>
           <button onClick={() => navigate("/rules")}>Regras</button>
-          <button onClick={() => navigate("/dashboard")}>Dashboard</button>
-          <button onClick={() => navigate("/wallet")}>Carteira</button>
         </nav>
         <button className="md:hidden rounded-xl border border-stone-200 p-2" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Abrir menu">
           {mobileMenu ? <X size={20}/> : <Menu size={20}/>}
@@ -215,7 +214,7 @@ export default function App() {
       {mobileMenu && <nav className="grid gap-1 border-t border-stone-200 bg-white p-3 md:hidden">
         {[
           ["/ranking","Ranking"],["/categories","Categorias"],["/how-it-works","Como funciona"],
-          ["/faq","FAQ"],["/rules","Regras"],["/dashboard","Dashboard"],["/wallet","Carteira"]
+          ["/faq","FAQ"],["/rules","Regras"]
         ].map(([href,label]) => <button key={href} onClick={() => navigate(href)} className="rounded-xl px-4 py-3 text-left font-semibold hover:bg-stone-50">{label}</button>)}
       </nav>}
     </header>
@@ -300,11 +299,9 @@ export default function App() {
     const rows = route === "/today" ? dailyListings : listings;
     return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><div className="flex flex-wrap gap-2"><button onClick={()=>navigate("/ranking")} className="rounded-xl border px-4 py-2 text-sm font-bold">All-time</button><button onClick={()=>navigate("/today")} className="rounded-xl border px-4 py-2 text-sm font-bold">Today</button><button onClick={()=>navigate("/daily")} className="rounded-xl border px-4 py-2 text-sm font-bold">Daily</button></div><div className="mt-6"><ListingRows rows={rows} heading={route==="/today"?"Today's ranking":route==="/daily"?"Daily archive":"All-time ranking"}/></div></main><Footer/></>;
   }
-  if (route === "/dashboard") return <InfoPage title="Dashboard"><p>O TopBid não usa saldo interno para alterar rankings. Os pedidos e pagamentos são processados no servidor.</p><p>Depois de autenticação, esta área pode apresentar pedidos, estados de pagamento e posições do utilizador.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Criar um pedido</button></InfoPage>;
-  if (route === "/wallet") return <InfoPage title="Carteira"><p>Não existe carteira custodial nem saldo interno no TopBid.</p><p>Os pagamentos crypto são enviados diretamente para os endereços configurados e só entram no ranking depois da verificação da transação.</p><p><strong>Ativos/redes suportados pelo fluxo atual:</strong> Bitcoin, Solana, Ethereum, BNB Smart Chain e Robinhood Chain, conforme a configuração do servidor.</p></InfoPage>;
   if (route === "/admin") return <AdminPage navigate={navigate}/>;
 
-  const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/dashboard" || route === "/wallet" || route === "/admin" || route.startsWith("/category/");
+  const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/admin" || route.startsWith("/category/");
   if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
 
   return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10"><MainForm/><div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div></main><Footer/></div>;
