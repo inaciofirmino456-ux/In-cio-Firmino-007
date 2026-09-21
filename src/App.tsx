@@ -317,7 +317,8 @@ export default function App() {
         )}
       </div>}
       <div className="mt-6"><ListingRows rows={route==="/daily"?dailyListings:rows} heading={isToday?"Today's ranking":route==="/daily"?"Daily · "+selectedDay:"All-time ranking"}/></div>
-    </main><Footer/></>
+    </main><Footer/></>;
+  }
   if (route === "/admin") return <AdminPage navigate={navigate}/>;
 
   const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/admin" || route.startsWith("/category/");
