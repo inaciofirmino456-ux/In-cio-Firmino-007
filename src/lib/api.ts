@@ -1,6 +1,10 @@
 import { supabase } from './supabase';
 import type { Order, CategoryRecord } from '../types';
 
+const publicKey = () =>
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 const functionsBase = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
   if (!url) throw new Error('VITE_SUPABASE_URL is not configured');
@@ -9,7 +13,7 @@ const functionsBase = () => {
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  ...(import.meta.env.VITE_SUPABASE_ANON_KEY ? { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY } : {}),
+  ...(publicKey() ? { apikey: publicKey() } : {}),
 });
 
 async function callFunction<T>(name: string, body: unknown): Promise<T> {
