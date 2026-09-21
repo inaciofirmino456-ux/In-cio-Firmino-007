@@ -48,6 +48,24 @@ async function verifyEvm(network:string,asset:string,txHash:string,recipient:str
   return {confirmations,receivedUnits:received.toString()};
 }
 
+async function verifySolana(txHash:string,recipient:string,expectedUnits:bigint){
+  const rpc=Deno.env.get("SOLANA_RPC_URL")||"https://api.mainnet-beta.solana.com";
+  const r=await fetch(rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+    jsonrpc:"2.0",id:1,method:"getTransaction",
+    params:[txHash,{encoding:"jsonParsed",commitment:"finalized",maxSupportedTransactionVersion:0}]
+  })});
+  if(!r.ok) throw new Error("SOLANA_RPC_ERROR");
+  const j=await r.json(); const tx=j.result;
+  if(!tx||tx.meta?.err) throw new Error("SOLANA_TRANSACTION_NOT_CONFIRMED");
+  let received=0n;
+  for(const ix of tx.transaction?.message?.instructions||[]){
+    const info=ix?.parsed?.info;
+    if(ix?.parsed?.type==="transfer" && info?.destination===recipient) received+=BigInt(info?.lamports||0);
+  }
+  if(received!==expectedUnits) throw new Error("AMOUNT_MISMATCH");
+  return {confirmations:1,receivedUnits:received.toString()};
+}
+
 async function verifyBitcoin(txHash:string,recipient:string,expectedUnits:bigint){
   const r=await fetch("https://mempool.space/api/tx/"+encodeURIComponent(txHash));
   if(!r.ok) throw new Error("BTC_TRANSACTION_NOT_FOUND");
@@ -85,7 +103,9 @@ Deno.serve(async(req)=>{
     const expectedUnits=BigInt(String(quote.expected_units));
     const verification=network==="bitcoin"
       ? await verifyBitcoin(txHash,quote.recipient_address,expectedUnits)
-      : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits);
+      : network==="solana"
+        ? asset==="SOL" ? await verifySolana(txHash,quote.recipient_address,expectedUnits) : (()=>{throw new Error("SOLANA_TOKEN_VERIFICATION_NOT_CONFIGURED")})()
+        : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits);
 
     const {data:result,error:ce}=await sb.rpc("confirm_order_payment",{
       p_order_id:order.id,p_provider:"crypto",p_provider_payment_id:txHash,p_amount_cents:order.charge_cents,
