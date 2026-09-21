@@ -1,0 +1,13 @@
+project_id = "topbid"
+
+[functions.create-order]
+verify_jwt = false
+
+[functions.payment-webhook]
+verify_jwt = false
+
+[functions.order-status]
+verify_jwt = false
+
+[functions.click]
+verify_jwt = false
