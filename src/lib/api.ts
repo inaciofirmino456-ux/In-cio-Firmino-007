@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Order } from '../types';
+import type { Order, CategoryRecord } from '../types';
 
 const functionsBase = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
@@ -12,29 +12,38 @@ const headers = () => ({
   ...(import.meta.env.VITE_SUPABASE_ANON_KEY ? { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY } : {}),
 });
 
-export async function createOrder(input: { url: string; categorySlug: string; requestedTotalUsd: number }): Promise<Order> {
-  const response = await fetch(functionsBase() + '/create-order', {
+async function callFunction<T>(name: string, body: unknown): Promise<T> {
+  const response = await fetch(functionsBase() + '/' + name, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Não foi possível criar o pedido.');
+  if (!response.ok) throw new Error(data.error || 'Pedido recusado pelo servidor.');
   return data;
 }
 
-export async function startPaymentSession(orderId: string, provider: "binance_pay" | "nowpayments"): Promise<PaymentSession> {
-  const response = await fetch(functionsBase() + "/payment-session", { method: "POST", headers: headers(), body: JSON.stringify({ orderId, provider }) });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Não foi possível iniciar o pagamento.");
-  return data;
+export async function createOrder(input: { url: string; categorySlug: string; requestedTotalUsd: number }): Promise<Order> {
+  return callFunction<Order>('create-order', input);
+}
+
+export async function startPaymentSession(
+  orderId: string,
+  provider: 'binance_pay' | 'nowpayments' | 'paygo'
+): Promise<PaymentSession> {
+  return callFunction<PaymentSession>('payment-session', { orderId, provider });
 }
 
 export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
-  const response = await fetch(functionsBase() + "/crypto-payment-instructions", { method: "POST", headers: headers(), body: JSON.stringify({ orderId, network, asset }) });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Não foi possível preparar o pagamento crypto.");
-  return data;
+  return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
+}
+
+export async function verifyCryptoPayment(orderId: string, network: string, asset: string, txHash: string) {
+  return callFunction<{ status: string; message?: string }>('verify-crypto-payment', { orderId, network, asset, txHash });
+}
+
+export async function getOrderStatus(orderId: string) {
+  return callFunction<{ status: string; amountUsd?: number; rank?: number }>('order-status', { orderId });
 }
 
 export async function recordClick(listingId: string) {
@@ -45,7 +54,7 @@ export async function recordClick(listingId: string) {
   }).catch(() => undefined);
 }
 
-export async function getCategories() {
+export async function getCategories(): Promise<CategoryRecord[]> {
   if (!supabase) return [];
   const { data, error } = await supabase.from('categories').select('id,slug,name').order('name');
   if (error) throw error;
@@ -61,4 +70,18 @@ export async function getListings() {
     .order('created_at', { ascending: true });
   if (error) throw error;
   return data ?? [];
+}
+
+export interface PaymentSession {
+  provider: string;
+  providerPaymentId?: string;
+  checkoutUrl?: string;
+}
+
+export interface CryptoInstructions {
+  network: string;
+  asset: string;
+  expectedAmount: number;
+  receivingAddress: string;
+  expiresAt: string;
 }
