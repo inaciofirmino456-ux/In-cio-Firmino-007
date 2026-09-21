@@ -79,6 +79,13 @@ export async function getListings() {
   return data ?? [];
 }
 
+export async function getDailyDays(): Promise<string[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('listing_daily_totals').select('day_utc').order('day_utc', { ascending: false });
+  if (error) throw error;
+  return [...new Set((data ?? []).map((row: any) => String(row.day_utc)))];
+}
+
 export async function getDailyListings(dayUtc: string) {
   if (!supabase) return [];
   const { data, error } = await supabase.from('listing_daily_totals')
