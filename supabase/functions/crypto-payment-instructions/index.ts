@@ -1,7 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
-const NETWORKS = new Set(["bitcoin","solana","ethereum","bsc","robinhood_chain"]);
+const NETWORKS = new Set(["bitcoin","ethereum","bsc"]);
 const ASSETS = new Set(["BTC","SOL","ETH","BNB","USDT","USDC"]);
 const DECIMALS: Record<string,number> = {BTC:8,SOL:9,ETH:18,BNB:18,USDT:6,USDC:6};
 
@@ -29,8 +29,7 @@ Deno.serve(async(req)=>{
 
     const compatible =
       (network==="bitcoin" && asset==="BTC") ||
-      (network==="solana" && asset==="SOL") ||
-      (["ethereum","bsc","robinhood_chain"].includes(network) && ["ETH","BNB","USDT","USDC"].includes(asset));
+      (["ethereum","bsc"].includes(network) && ["ETH","BNB","USDT","USDC"].includes(asset));
     if(!compatible) return json({error:"ASSET_NOT_SUPPORTED_ON_NETWORK"},400);
 
     const sb=adminClient();
