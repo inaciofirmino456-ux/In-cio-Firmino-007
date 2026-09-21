@@ -4,6 +4,7 @@ import {
   createOrder,
   getCategories,
   getListings,
+  getDailyListings,
   recordClick,
   startPaymentSession,
   getCryptoInstructions,
@@ -72,6 +73,7 @@ function todayUtc(value: string) {
 export default function App() {
   const [route, setRoute] = useState(currentPath());
   const [listings, setListings] = useState<Listing[]>([]);
+  const [dailyListings, setDailyListings] = useState<Listing[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("");
@@ -95,7 +97,9 @@ export default function App() {
   };
 
   async function refresh() {
-    const [nextListings, nextCategories] = await Promise.all([getListings(), getCategories()]);
+    const today = new Date().toISOString().slice(0, 10);
+    const [nextListings, nextCategories, nextDaily] = await Promise.all([getListings(), getCategories(), getDailyListings(today)]);
+    setDailyListings(nextDaily as Listing[]);
     setListings(nextListings.map((item) => {
       const rawCategory = Array.isArray(item.category) ? item.category[0] : item.category;
       return { ...item, category: rawCategory ? { name: String(rawCategory.name), slug: String(rawCategory.slug) } : undefined } as Listing;
@@ -290,10 +294,10 @@ export default function App() {
   if (route.startsWith("/category/")) {
     const slug = decodeURIComponent(route.slice("/category/".length));
     const rows = listings.filter(x=>x.category?.slug===slug);
-    return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><button onClick={()=>navigate("/categories")} className="mb-5 text-sm font-bold text-orange-600">← Todas as categorias</button><h1 className="text-3xl font-black sm:text-4xl">{slugLabel(slug)}</h1><p className="mt-2 text-stone-500">Ranking da categoria.</p><div className="mt-7"><ListingRows rows={rows} heading="Ranking da categoria"/></div></main><Footer/></>;
+    return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><button onClick={()=>navigate("/categories")} className="mb-5 text-sm font-bold text-orange-600">← Todas as categorias</button><h1 className="text-3xl font-black sm:text-4xl">{slugLabel(slug)}</h1><p className="mt-2 text-stone-500">Ranking da categoria por valor total confirmado.</p><div className="mt-7"><ListingRows rows={rows} heading="Ranking da categoria"/></div></main><Footer/></>;
   }
   if (route === "/ranking" || route === "/today" || route === "/daily") {
-    const rows = route === "/today" ? listings.filter(x=>todayUtc(x.created_at)) : listings;
+    const rows = route === "/today" ? dailyListings : listings;
     return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><div className="flex flex-wrap gap-2"><button onClick={()=>navigate("/ranking")} className="rounded-xl border px-4 py-2 text-sm font-bold">All-time</button><button onClick={()=>navigate("/today")} className="rounded-xl border px-4 py-2 text-sm font-bold">Today</button><button onClick={()=>navigate("/daily")} className="rounded-xl border px-4 py-2 text-sm font-bold">Daily</button></div><div className="mt-6"><ListingRows rows={rows} heading={route==="/today"?"Today's ranking":route==="/daily"?"Daily archive":"All-time ranking"}/></div></main><Footer/></>;
   }
   if (route === "/dashboard") return <InfoPage title="Dashboard"><p>O TopBid não usa saldo interno para alterar rankings. Os pedidos e pagamentos são processados no servidor.</p><p>Depois de autenticação, esta área pode apresentar pedidos, estados de pagamento e posições do utilizador.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Criar um pedido</button></InfoPage>;
