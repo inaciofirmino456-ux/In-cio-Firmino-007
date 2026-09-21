@@ -41,9 +41,18 @@ Deno.serve(async(req)=>{
   const eventId=String(body.event_id||body.payment_id||body.merchantTradeNo||crypto.randomUUID());
   const {error:logError}=await sb.from("webhook_events").insert({provider,event_id:eventId,signature_valid:true,payload:body});
   if(logError && !String(logError.message).includes("duplicate")) return new Response(JSON.stringify({error:"EVENT_LOG_FAILED"}),{status:500,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  const orderId=String(body.order_id||body.merchantTradeNo||"");
+  const rawOrderId=String(body.order_id||"");
+  const merchantTradeNo=String(body.merchantTradeNo||"");
+  const reconstructedOrderId=/^[0-9a-f]{32}$/i.test(merchantTradeNo)
+    ? merchantTradeNo.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/,"$1-$2-$3-$4-$5")
+    : merchantTradeNo;
+  const orderId=rawOrderId || reconstructedOrderId;
   if(!orderId) return new Response(JSON.stringify({ok:true,ignored:true}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
-  const {data:order}=await sb.from("orders").select("id,charge_cents,provider_payment_id").eq("id",orderId).single();
+  let {data:order}=await sb.from("orders").select("id,charge_cents,provider_payment_id").eq("id",orderId).maybeSingle();
+  if(!order && merchantTradeNo) {
+    const fallback=await sb.from("orders").select("id,charge_cents,provider_payment_id").eq("provider_payment_id",merchantTradeNo).maybeSingle();
+    order=fallback.data;
+  }
   if(!order) return new Response(JSON.stringify({ok:true,ignored:true}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
   let status="pending"; let amountCents=0; let paymentId=String(body.payment_id||body.merchantTradeNo||order.provider_payment_id||eventId);
   if(provider==="nowpayments"){
