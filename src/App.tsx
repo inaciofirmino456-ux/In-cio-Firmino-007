@@ -32,10 +32,13 @@ export default function App() {
 
   async function refresh() {
     const [nextListings, nextCategories] = await Promise.all([getListings(), getCategories()]);
-    setListings(nextListings.map((item) => ({
-      ...item,
-      category: Array.isArray(item.category) ? item.category[0] : item.category,
-    })) as unknown as Listing[]);
+    setListings(nextListings.map((item) => {
+      const rawCategory = Array.isArray(item.category) ? item.category[0] : item.category;
+      return {
+        ...item,
+        category: rawCategory ? { name: String(rawCategory.name), slug: String(rawCategory.slug) } : undefined,
+      } as Listing;
+    }));
     setCategories(nextCategories as CategoryRecord[]);
     if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);
   }
@@ -48,7 +51,7 @@ export default function App() {
     const channel = client.channel('public-listings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => { refresh().catch(() => undefined); })
       .subscribe();
-    return () => { client.removeChannel(channel); };
+    return () => { client?.removeChannel(channel); };
   }, []);
 
   const top = listings[0];
