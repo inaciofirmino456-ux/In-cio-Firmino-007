@@ -32,7 +32,10 @@ export default function App() {
 
   async function refresh() {
     const [nextListings, nextCategories] = await Promise.all([getListings(), getCategories()]);
-    setListings(nextListings as Listing[]);
+    setListings(nextListings.map((item) => ({
+      ...item,
+      category: Array.isArray(item.category) ? item.category[0] : item.category,
+    })) as unknown as Listing[]);
     setCategories(nextCategories as CategoryRecord[]);
     if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);
   }
@@ -40,11 +43,12 @@ export default function App() {
   useEffect(() => {
     refresh().catch((e) => setError(e instanceof Error ? e.message : 'Falha ao carregar.'));
     setLoading(false);
-    if (!supabase) return;
-    const channel = supabase.channel('public-listings')
+    const client = supabase;
+    if (!client) return;
+    const channel = client.channel('public-listings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => { refresh().catch(() => undefined); })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { client.removeChannel(channel); };
   }, []);
 
   const top = listings[0];
