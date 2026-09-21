@@ -32,7 +32,8 @@ export async function getCryptoInstructions(orderId: string, network: string, as
 }
 
 export async function verifyCryptoPayment(orderId: string, network: string, asset: string, txHash: string) {
-  return callFunction<{ status: string; message?: string }>('verify-crypto-payment', { orderId, network, asset, txHash });
+  const result = await callFunction<{ status?: string; result?: { status?: string }; message?: string }>('verify-crypto-payment', { orderId, network, asset, txHash });
+  return { status: result.status ?? result.result?.status ?? "pending", message: result.message };
 }
 
 export async function getOrderStatus(orderId: string) {
