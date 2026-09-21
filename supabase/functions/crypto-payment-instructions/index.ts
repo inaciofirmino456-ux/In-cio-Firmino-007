@@ -29,7 +29,7 @@ Deno.serve(async(req)=>{
 
     const compatible =
       (network==="bitcoin" && asset==="BTC") ||
-      (network==="solana" && ["SOL","USDT","USDC"].includes(asset)) ||
+      (network==="solana" && asset==="SOL") ||
       (["ethereum","bsc","robinhood_chain"].includes(network) && ["ETH","BNB","USDT","USDC"].includes(asset));
     if(!compatible) return json({error:"ASSET_NOT_SUPPORTED_ON_NETWORK"},400);
 
