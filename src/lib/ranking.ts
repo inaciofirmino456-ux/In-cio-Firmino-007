@@ -4,7 +4,7 @@ export function sortRanking<T extends RankItem>(items: T[]) {
   return [...items].sort((a,b) => b.totalPaidCents-a.totalPaidCents || a.createdAt-b.createdAt);
 }
 
-export function claimPrice(currentTopCents: number, incrementCents = 500) {
+export function claimPrice(currentTopCents: number, incrementCents = 100) {
   return currentTopCents > 0 ? currentTopCents + incrementCents : 100;
 }
 
