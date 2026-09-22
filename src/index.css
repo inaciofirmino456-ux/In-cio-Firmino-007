@@ -1,1 +1,53 @@
 @import "tailwindcss";
+
+@keyframes topbid-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .42; transform: scale(.72); }
+}
+@keyframes topbid-ticker {
+  from { transform: translateX(8%); }
+  to { transform: translateX(-105%); }
+}
+@keyframes topbid-pop {
+  0% { transform: scale(.96); opacity: .35; }
+  70% { transform: scale(1.015); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+  animation: topbid-pulse 1.4s ease-in-out infinite;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  gap: 2.25rem;
+  white-space: nowrap;
+  animation: topbid-ticker 28s linear infinite;
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.ticker-item b {
+  color: #ea580c;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+.rank-one-card {
+  animation: topbid-pop .7s ease-out both;
+}
+.price-pop {
+  animation: topbid-pop .65s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .ticker-track, .rank-one-card, .price-pop { animation: none; }
+}
