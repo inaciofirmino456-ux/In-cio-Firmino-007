@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowRight, CheckCircle2, ExternalLink, Flame, Loader2, Menu, ShieldCheck, X } from "lucide-react";
+import { Activity, ArrowRight, CheckCircle2, ExternalLink, Flame, Loader2, Menu, Radio, ShieldCheck, TrendingUp, X, Zap } from "lucide-react";
 import {
   createOrder,
   getCategories,
@@ -50,6 +50,25 @@ const FALLBACK_CATEGORIES = [
   ["other","Other"],
 ] as const;
 
+function AnimatedMoney({ cents }: { cents: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const target = Math.max(0, cents);
+    const start = performance.now();
+    const duration = 650;
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setShown(Math.round(target * eased));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [cents]);
+  return <span>{money(shown)}</span>;
+}
+
 function money(cents: number) {
   return "$" + (cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
@@ -88,7 +107,7 @@ export default function App() {
   const [txHash, setTxHash] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [error, setError] = useState("");
-  const [mobileMenu, setMobileMenu] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);\n  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const navigate = (to: string) => {
     window.history.pushState({}, "", to);
@@ -107,7 +126,7 @@ export default function App() {
       return { ...item, category: rawCategory ? { name: String(rawCategory.name), slug: String(rawCategory.slug) } : undefined } as Listing;
     }));
     setCategories(nextCategories);
-    if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);
+    if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);\n    setLastUpdated(new Date());
   }
 
   useEffect(() => {
@@ -127,6 +146,11 @@ export default function App() {
   const allCategories = categories.length ? categories : FALLBACK_CATEGORIES.map(([slug,name]) => ({ id: slug, slug, name }));
   const top = listings[0];
   const minForTop = top ? top.total_paid_cents / 100 + TOP_RANK_INCREMENT_USD : MIN_BID_USD;
+  const liveActivity = useMemo(() => {
+    const source = dailyListings.length ? dailyListings : listings;
+    return [...source].sort((a,b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()).slice(0, 8);
+  }, [dailyListings, listings]);
+
   const projectedRank = useMemo(() => {
     const index = listings.findIndex((item) => bid * 100 > item.total_paid_cents);
     return index < 0 ? listings.length + 1 : index + 1;
@@ -208,12 +232,26 @@ export default function App() {
     </header>
   );
 
+  const LiveStrip = () => (
+    <div className="border-b border-orange-100 bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-2">
+        <div className="flex items-center gap-3 overflow-hidden rounded-full border border-orange-100 bg-orange-50/80 px-3 py-2 text-xs">
+          <span className="flex shrink-0 items-center gap-2 font-black text-orange-700"><span className="live-dot"/> LIVE</span>
+          <div className="min-w-0 flex-1 overflow-hidden"><div className="ticker-track">
+            {(liveActivity.length ? liveActivity : listings.slice(0, 5)).map(item => <span key={item.id} className="ticker-item"><Zap size={12} className="text-orange-500"/><strong>{item.title}</strong><span>posição #{listings.findIndex(x=>x.id===item.id)+1}</span><b><AnimatedMoney cents={item.total_paid_cents}/></b></span>)}
+          </div></div>
+          <span className="hidden shrink-0 items-center gap-1 text-stone-400 sm:flex"><Activity size={13}/> {lastUpdated ? "sincronizado" : "ao vivo"}</span>
+        </div>
+      </div>
+    </div>
+  );
+
   const Footer = () => <footer className="mx-auto max-w-6xl px-4 py-10 text-xs text-stone-500">
     <div className="flex flex-wrap gap-x-5 gap-y-2">
       <button onClick={() => navigate("/rules")}>Regras</button><button onClick={() => navigate("/faq")}>FAQ</button>
       <button onClick={() => navigate("/how-it-works")}>Como funciona</button><button onClick={() => navigate("/categories")}>Categorias</button>
     </div>
-    <p className="mt-4">TopBid · pagamentos verificados · sem pagamentos simulados.</p>
+    <div className="mt-7 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black">{listings.length.toLocaleString("en-US")}</div><div className="mt-1">posições carregadas</div></div><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black text-orange-600"><AnimatedMoney cents={listings.reduce((s,x)=>s+x.total_paid_cents,0)}/></div><div className="mt-1">valor confirmado</div></div><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="flex items-center gap-2 text-2xl font-black"><span className="live-dot"/> LIVE</div><div className="mt-1">ranking sincronizado</div></div></div><p className="mt-5">TopBid · pagamentos verificados · sem pagamentos simulados.</p>
   </footer>;
 
   const InfoPage = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -224,21 +262,25 @@ export default function App() {
     <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4"><h2 className="font-bold">{heading}</h2><span className="text-xs text-stone-400">{rows.length} resultados</span></div>
       {rows.length === 0 ? <div className="p-10 text-center text-stone-500">Ainda não existem posições confirmadas.</div> : rows.map((item,index) =>
-        <article key={item.id} className="grid gap-3 border-b border-stone-100 px-5 py-5 sm:grid-cols-[70px_1fr_auto] sm:items-center">
+        <article key={item.id} className={`grid gap-3 border-b border-stone-100 px-5 py-5 sm:grid-cols-[70px_1fr_auto] sm:items-center ${index===0 ? "bg-orange-50/40" : "hover:bg-stone-50/70"} transition`}>
           <div className="text-lg font-black text-stone-400">#{index+1}</div>
           <div className="min-w-0">
             <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="inline-flex max-w-full items-center gap-1 font-bold hover:text-orange-600"><span className="truncate">{item.title}</span><ExternalLink size={13}/></a>
             <p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div>
           </div>
-          <div className="flex items-center justify-between gap-4 sm:block sm:text-right"><div className="text-xl font-black">{money(item.total_paid_cents)}</div><button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button></div>
+          <div className="flex items-center justify-between gap-4 sm:block sm:text-right"><div className={`text-xl font-black ${index===0 ? "text-orange-600" : ""}`}><AnimatedMoney cents={item.total_paid_cents}/></div><button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button></div>
         </article>
       )}
     </section>
   );
 
   const MainForm = () => (
-    <section className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
+    <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-black text-green-700"><span className="live-dot"/> RANKING AO VIVO</div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-stone-400"><Radio size={14}/> atualizações automáticas</div>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
         <div><p className="mb-2 text-xs font-bold uppercase tracking-widest text-orange-600">Pay to rank</p><h1 className="text-3xl font-black tracking-tight sm:text-5xl">Claim your place on the public leaderboard.</h1><p className="mt-3 max-w-2xl text-stone-500">Enter your product URL or X handle, choose a category and pay. The ranking changes only after verified payment.</p></div>
         <div className="rounded-2xl bg-stone-950 p-5 text-white"><div className="text-xs uppercase tracking-widest text-stone-400">Target position</div><div className="mt-1 text-4xl font-black">#{projectedRank}</div><div className="mt-2 text-xs text-stone-400">Minimum for #1: {money(Math.round(minForTop*100))}</div></div>
@@ -246,7 +288,11 @@ export default function App() {
       <form onSubmit={submit} className="mt-8 grid gap-3 md:grid-cols-[2fr_1.2fr_1fr_auto]">
         <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourproduct.com or @handle" className="min-w-0 rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-orange-500"/>
         <select value={category} onChange={e=>setCategory(e.target.value)} className="min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3"><option value="">Escolha uma categoria</option>{allCategories.map(c=><option key={c.id} value={c.slug}>{c.name}</option>)}</select>
-        <input type="number" min={MIN_BID_USD} max={MAX_BID_USD} step={1} value={bid} onChange={e=>setBid(Number(e.target.value)||1)} className="min-w-0 rounded-xl border border-stone-300 px-4 py-3"/>
+        <div className="flex overflow-hidden rounded-xl border border-stone-300 bg-white">
+          <button type="button" onClick={()=>setBid(Math.max(MIN_BID_USD,bid-1))} className="w-12 text-lg font-black text-stone-500 hover:bg-stone-50">−</button>
+          <input type="number" min={MIN_BID_USD} max={MAX_BID_USD} step={1} value={bid} onChange={e=>setBid(Math.min(MAX_BID_USD,Math.max(MIN_BID_USD,Number(e.target.value)||1)))} className="min-w-0 flex-1 border-x border-stone-200 px-3 py-3 text-center font-bold outline-none"/>
+          <button type="button" onClick={()=>setBid(Math.min(MAX_BID_USD,bid+1))} className="w-12 text-lg font-black text-stone-500 hover:bg-stone-50">+</button>
+        </div>
         <button disabled={creating} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-bold text-white hover:bg-orange-600 disabled:opacity-60">{creating?<Loader2 className="animate-spin" size={18}/>:<ArrowRight size={18}/>} Alegar</button>
       </form>
       {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
@@ -282,7 +328,7 @@ export default function App() {
         </div>}
 {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
-      <p className="mt-4 flex items-center gap-2 text-xs text-stone-500"><ShieldCheck size={14}/> Pagamentos e ranking são validados no servidor.</p>
+      <p className="mt-4 flex items-center gap-2 text-xs text-stone-500"><ShieldCheck size={14}/> Pagamentos e ranking são validados no servidor. <TrendingUp size={14}/> Dados sincronizados automaticamente.</p>
     </section>
   );
 
@@ -321,7 +367,28 @@ export default function App() {
   const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/admin" || route.startsWith("/category/");
   if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
 
-  return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10"><MainForm/><div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div></main><Footer/></div>;
+  return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
+        <button onClick={()=>navigate("/")} className="rounded-xl bg-stone-950 px-4 py-2 text-xs font-black text-white">Todos</button>
+        <button onClick={()=>navigate("/ranking")} className="rounded-xl px-4 py-2 text-xs font-bold text-stone-500 hover:bg-stone-50">Classificações</button>
+        <button onClick={()=>navigate("/categories")} className="rounded-xl px-4 py-2 text-xs font-bold text-stone-500 hover:bg-stone-50">Explorar</button>
+      </div>
+      <div className="flex items-center gap-2 text-xs font-semibold text-stone-500"><span className="live-dot"/>{listings.length.toLocaleString("en-US")} posições sincronizadas</div>
+    </div>
+    <MainForm/>
+    {top && <section className="mt-8">
+      <div className="mb-3 flex items-end justify-between"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Destaque</p><h2 className="mt-1 text-2xl font-black">#1 agora</h2></div><span className="text-xs font-bold text-stone-400">posição viva</span></div>
+      <article className="rank-one-card relative overflow-hidden rounded-[2rem] border-2 border-orange-400 bg-white p-6 shadow-[0_0_0_5px_rgba(249,115,22,0.08),0_18px_50px_rgba(0,0,0,0.08)] sm:p-8">
+        <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-700"><span className="live-dot"/> #1</div>
+        <div className="pr-20"><a href={top.canonical_url} target="_blank" rel="noreferrer" onClick={()=>recordClick(top.id)} className="text-xl font-black hover:text-orange-600 sm:text-3xl">{top.title}</a>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">{top.description}</p></div>
+        <div className="mt-6 flex flex-wrap items-end justify-between gap-4"><div><div className="text-xs font-bold uppercase tracking-widest text-stone-400">total confirmado</div><div className="price-pop mt-1 text-4xl font-black text-orange-600 sm:text-5xl"><AnimatedMoney cents={top.total_paid_cents}/></div></div>
+        <div className="text-right text-xs text-stone-400">{top.category?.name}<br/>{top.domain} · {top.clicks} clicks</div></div>
+      </article>
+    </section>}
+    <div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div>
+    </main><Footer/></div>;
 }
 
 function AdminPage({navigate}:{navigate:(to:string)=>void}) {
