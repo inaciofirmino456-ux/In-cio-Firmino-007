@@ -1,6 +1,6 @@
 {
   "name": "TopBid",
-  "url": "https://topbid.lol",
+  "url": "https://topbid.club",
   "description": "The pay-to-rank public leaderboard. Bid to rank your project, app, or profile at the top.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
