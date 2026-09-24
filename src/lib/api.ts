@@ -31,13 +31,12 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return callFunction<Order>('create-order', input);
 }
 
-export async function getCryptoInstructions(orderId: string, network: string, asset: string, payerAddress?: string): Promise<CryptoInstructions> {
-  return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset, payerAddress });
+export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
+  return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
 }
 
-export async function verifyCryptoPayment(orderId: string, network: string, asset: string, txHash: string) {
-  const result = await callFunction<{ status?: string; result?: { status?: string }; message?: string }>('verify-crypto-payment', { orderId, network, asset, txHash });
-  return { status: result.status ?? result.result?.status ?? "pending", message: result.message };
+export async function detectCryptoPayment(orderId: string, network: string, asset: string) {
+  return callFunction<{ status: string; detected?: boolean; txHash?: string; confirmations?: number }>('detect-crypto-payment', { orderId, network, asset });
 }
 
 export async function getOrderStatus(orderId: string) {
