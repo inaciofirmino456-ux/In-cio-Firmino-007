@@ -22,7 +22,7 @@ async function rpcCall(url:string,method:string,params:any[]){
 }
 function hex(v:string){return BigInt(v||"0x0")}
 
-async function verifyEvm(network:string,asset:string,txHash:string,recipient:string,expectedUnits:bigint){
+async function verifyEvm(network:string,asset:string,txHash:string,recipient:string,expectedUnits:bigint,payerAddress?:string){
   const expectedAsset = network==="ethereum" || network==="robinhood_chain" ? "ETH" : network==="bsc" ? "BNB" : "";
   if(asset!==expectedAsset) throw new Error("ASSET_NOT_SUPPORTED_ON_NETWORK");
   const rpc=RPC[network]; if(!rpc) throw new Error("RPC_NOT_CONFIGURED");
@@ -33,9 +33,10 @@ async function verifyEvm(network:string,asset:string,txHash:string,recipient:str
   const confirmations=Math.max(0,Number(hex(latest)-hex(receipt.blockNumber)));
   const min=Number(Deno.env.get("CRYPTO_MIN_CONFIRMATIONS")||"3");
   if(confirmations<min) throw new Error("INSUFFICIENT_CONFIRMATIONS");
+  if(payerAddress && !eq(tx.from||"",payerAddress)) throw new Error("PAYER_ADDRESS_MISMATCH");
   const received=eq(tx.to||"",recipient) ? hex(tx.value) : 0n;
   if(received!==expectedUnits) throw new Error("AMOUNT_MISMATCH");
-  return {confirmations,receivedUnits:received.toString()};
+  return {confirmations,receivedUnits:received.toString(),fromAddress:tx.from||""};
 }
 
 async function verifySolana(txHash:string,recipient:string,expectedUnits:bigint){
@@ -92,7 +93,7 @@ Deno.serve(async(req)=>{
     if(order.status!=="pending") return json({error:"ORDER_NOT_PAYABLE"},409);
     if(order.expires_at&&new Date(order.expires_at).getTime()<=Date.now()) return json({error:"ORDER_EXPIRED"},409);
 
-    const {data:quote,error:qe}=await sb.from("crypto_payment_quotes").select("network,asset,recipient_address,expected_units,expires_at").eq("order_id",orderId).eq("network",network).eq("asset",asset).single();
+    const {data:quote,error:qe}=await sb.from("crypto_payment_quotes").select("network,asset,recipient_address,expected_units,expires_at,payer_address").eq("order_id",orderId).eq("network",network).eq("asset",asset).single();
     if(qe||!quote) return json({error:"CRYPTO_QUOTE_NOT_FOUND"},409);
     if(new Date(quote.expires_at).getTime()<=Date.now()) return json({error:"CRYPTO_QUOTE_EXPIRED"},409);
 
