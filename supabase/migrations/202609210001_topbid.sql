@@ -2,7 +2,7 @@ create extension if not exists pgcrypto;
 
 create type public.order_status as enum ('pending','paid','failed','expired','review');
 create type public.payment_status as enum ('pending','confirmed','failed','refunded','review');
-create type public.provider_name as enum ('paygo','coinbase_commerce','nowpayments','bvnk','binance_pay','bybit_pay');
+create type public.provider_name as enum ('crypto');
 
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
