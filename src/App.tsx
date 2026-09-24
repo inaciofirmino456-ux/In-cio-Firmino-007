@@ -12,7 +12,7 @@ import {
   getOrderStatus,
 } from "./lib/api";
 import { supabase } from "./lib/supabase";
-import { connectEvmWallet, readConnectedEvmWallet, shortAddress } from "./lib/wallet";
+import { connectEvmWallet, readConnectedEvmWallet, shortAddress, sendNativePayment } from "./lib/wallet";
 import type { CategoryRecord, Listing } from "./types";
 
 const MIN_BID_USD = 1;
@@ -104,8 +104,7 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [order, setOrder] = useState<{ id: string; amount: number } | null>(null);
   const [paymentLoading, setPaymentLoading] = useState("");
-  const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; address: string; expiresAt: string } | null>(null);
-  const [txHash, setTxHash] = useState("");
+  const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; expectedUnits: string; decimals: number; address: string; expiresAt: string } | null>(null);
   const [paymentStatus, setPaymentStatus] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [walletChainId, setWalletChainId] = useState("");
@@ -164,7 +163,7 @@ export default function App() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setError(""); setOrder(null); setCrypto(null); setTxHash(""); setPaymentStatus("");
+    setError(""); setOrder(null); setCrypto(null); setPaymentStatus("");
     const requested = Math.min(MAX_BID_USD, Math.max(MIN_BID_USD, Math.floor(Number(bid) || 1)));
     if (!url.trim()) return setError("Introduza a URL do site ou um @handle do X.");
     if (!category) return setError("Escolha uma categoria.");
@@ -199,22 +198,32 @@ export default function App() {
     setPaymentLoading(network + asset); setError(""); setPaymentStatus("");
     try {
       const result = await getCryptoInstructions(order.id, network, asset, walletAddress || undefined);
-      setCrypto({ network, asset, amount: result.expectedAmount, address: result.receivingAddress, expiresAt: result.expiresAt });
+      setCrypto({ network, asset, amount: result.expectedAmount, expectedUnits: result.expectedUnits, decimals: result.decimals, address: result.receivingAddress, expiresAt: result.expiresAt });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível preparar o pagamento.");
     } finally { setPaymentLoading(""); }
   }
 
-  async function confirmCrypto() {
-    if (!order || !crypto || !txHash.trim()) return setError("Introduza o TX hash da transação.");
-    setPaymentLoading("verify"); setError(""); setPaymentStatus("");
+  async function payWithWallet() {
+    if (!order || !crypto) return;
+    if (!walletAddress) { await handleConnectWallet(); return; }
+    if (!["ethereum","bsc","robinhood_chain"].includes(crypto.network)) return setError("Pagamento direto pela carteira está disponível para redes EVM.");
+    setPaymentLoading("wallet"); setError(""); setPaymentStatus("A abrir a carteira para confirmar o pagamento...");
     try {
-      const result = await verifyCryptoPayment(order.id, crypto.network, crypto.asset, txHash.trim());
-      setPaymentStatus(result.status === "paid" ? "Pagamento confirmado. O ranking será atualizado." : "Aguardando confirmação da transação...");
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "A transação ainda não foi confirmada.");
-    } finally { setPaymentLoading(""); }
+      const valueHex = "0x" + BigInt(crypto.expectedUnits).toString(16);
+      const { txHash } = await sendNativePayment(crypto.network, walletAddress, crypto.address, valueHex);
+      setPaymentStatus("Pagamento enviado. A detetar a transação automaticamente...");
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await new Promise(resolve => window.setTimeout(resolve, 2500));
+        try {
+          const result = await verifyCryptoPayment(order.id, crypto.network, crypto.asset, txHash);
+          if (result.status === "paid") { setPaymentStatus("Pagamento confirmado. O ranking foi atualizado."); await refresh(); return; }
+          setPaymentStatus("Transação detetada. Aguardando confirmação da rede...");
+        } catch { setPaymentStatus("Pagamento enviado. Aguardando confirmação da rede..."); }
+      }
+      setPaymentStatus("Pagamento enviado. A confirmação continuará automaticamente.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível enviar o pagamento pela carteira."); setPaymentStatus(""); }
+    finally { setPaymentLoading(""); }
   }
 
   useEffect(() => {
@@ -371,10 +380,9 @@ export default function App() {
           </div>
           <div className="mt-3 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
           <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button>
-          <div className="mt-2 font-bold">Enviar exatamente: {crypto.amount} {crypto.asset}</div>
-          <div className="mt-3"><input value={txHash} onChange={e=>setTxHash(e.target.value)} placeholder="Cole aqui o TX hash" className="w-full rounded-xl border border-stone-300 px-3 py-3 font-mono text-xs"/></div>
-          <button onClick={confirmCrypto} disabled={paymentLoading==="verify"} className="mt-3 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="verify"?"A verificar...":"Verificar pagamento"}</button>
-          <p className="mt-2 text-xs text-stone-500">Com carteira conectada, o endereço público fica associado ao pedido. O servidor verifica rede, ativo, destinatário, valor, remetente e confirmações antes de alterar o ranking.</p>
+          <div className="mt-2 font-bold">Pagar exatamente: {crypto.amount} {crypto.asset}</div>
+          {["ethereum","bsc","robinhood_chain"].includes(crypto.network) && <button onClick={payWithWallet} disabled={!!paymentLoading} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="wallet"?"Aguardando carteira...":"💳 Pagar com carteira"}</button>}
+          <p className="mt-2 text-xs text-stone-500">Não precisa copiar TX Hash. Depois da confirmação na carteira, o TopBid usa o TX Hash apenas internamente para verificar a transação e confirmar o pagamento.</p>
         </div>}
 {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
