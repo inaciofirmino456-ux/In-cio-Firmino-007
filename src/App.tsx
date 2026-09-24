@@ -277,7 +277,7 @@ export default function App() {
     </section>
   );
 
-  const MainForm = () => (
+  const mainForm = (
     <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-black text-green-700"><span className="live-dot"/> RANKING AO VIVO</div>
@@ -388,7 +388,7 @@ export default function App() {
       </div>
       <div className="flex items-center gap-2 text-xs font-semibold text-stone-500"><span className="live-dot"/>{listings.length.toLocaleString("en-US")} posições sincronizadas</div>
     </div>
-    <MainForm/>
+    {mainForm}
     {top && <section className="mt-8">
       <div className="mb-3 flex items-end justify-between"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Destaque</p><h2 className="mt-1 text-2xl font-black">#1 agora</h2></div><span className="text-xs font-bold text-stone-400">posição viva</span></div>
       <article className="rank-one-card relative overflow-hidden rounded-[2rem] border-2 border-orange-400 bg-white p-6 shadow-[0_0_0_5px_rgba(249,115,22,0.08),0_18px_50px_rgba(0,0,0,0.08)] sm:p-8">
