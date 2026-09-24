@@ -42,3 +42,38 @@ export function shortAddress(address: string) {
 export function isValidEvmAddress(address: string) {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
+
+const CHAIN_IDS: Record<string, string> = {
+  ethereum: "0x1",
+  bsc: "0x38",
+  robinhood_chain: "0x1237",
+};
+
+export async function sendNativePayment(
+  network: string,
+  from: string,
+  to: string,
+  valueHex: string,
+): Promise<{ txHash: string }> {
+  const provider = getEvmWallet();
+  if (!provider) throw new Error("Abra o TopBid dentro de uma carteira EVM compatível.");
+  const expectedChain = CHAIN_IDS[network];
+  if (!expectedChain) throw new Error("Esta rede ainda não permite pagamento direto pela carteira.");
+  const currentChain = String(await provider.request({ method: "eth_chainId" })).toLowerCase();
+  if (currentChain !== expectedChain) {
+    try {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: expectedChain }],
+      });
+    } catch {
+      throw new Error("A sua carteira está noutra rede. Mude para a rede selecionada e tente novamente.");
+    }
+  }
+  const txHash = await provider.request({
+    method: "eth_sendTransaction",
+    params: [{ from, to, value: valueHex }],
+  }) as string;
+  if (!txHash) throw new Error("A carteira não devolveu o TX Hash.");
+  return { txHash };
+}
