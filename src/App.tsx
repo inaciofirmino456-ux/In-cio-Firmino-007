@@ -18,6 +18,7 @@ import type { CategoryRecord, Listing } from "./types";
 const MIN_BID_USD = 1;
 const MAX_BID_USD = 999999;
 const TOP_RANK_INCREMENT_USD = 1;
+const RANKING_PAGE_SIZE = 50;
 
 const FALLBACK_CATEGORIES = [
   ["ai-agents-infrastructure","AI Agents & Infrastructure"],
@@ -156,6 +157,9 @@ export default function App() {
   const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [rankingPage, setRankingPage] = useState(1);
+  const [categoryPage, setCategoryPage] = useState(1);
+  const [dailyPage, setDailyPage] = useState(1);
 
   const navigate = (to: string) => {
     window.history.pushState({}, "", to);
@@ -321,45 +325,66 @@ export default function App() {
       <button onClick={() => navigate("/rules")}>Regras</button><button onClick={() => navigate("/faq")}>FAQ</button>
       <button onClick={() => navigate("/how-it-works")}>Como funciona</button><button onClick={() => navigate("/categories")}>Categorias</button>
     </div>
-    <div className="mt-7 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black">{listings.length.toLocaleString("en-US")}</div><div className="mt-1">posições carregadas</div></div><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black text-orange-600"><AnimatedMoney cents={listings.reduce((s,x)=>s+x.total_paid_cents,0)}/></div><div className="mt-1">valor confirmado</div></div><div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="flex items-center gap-2 text-2xl font-black"><span className="live-dot"/> LIVE</div><div className="mt-1">ranking sincronizado</div></div></div><p className="mt-5">TopBid · pagamentos verificados · sem pagamentos simulados.</p>
+    <div className="mt-7 grid gap-3 sm:grid-cols-3">
+      <div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black">{listings.length.toLocaleString("en-US")}</div><div className="mt-1">posições carregadas</div></div>
+      <div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="text-2xl font-black text-orange-600"><AnimatedMoney cents={listings.reduce((sum,x)=>sum+x.total_paid_cents,0)}/></div><div className="mt-1">valor confirmado</div></div>
+      <div className="rounded-2xl border border-stone-200 bg-white p-4"><div className="flex items-center gap-2 text-2xl font-black"><span className="live-dot"/> LIVE</div><div className="mt-1">ranking sincronizado</div></div>
+    </div>
+    <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-stone-200 pt-6">
+      <div><div className="font-bold text-stone-700">TopBid</div><div className="mt-1">Criado por <strong className="text-orange-600">@inaciofirmino</strong></div></div>
+      <div className="flex flex-wrap gap-2">
+        <a href="https://www.instagram.com/inaciofirmino07/" target="_blank" rel="noreferrer" className="rounded-full border border-stone-200 bg-white px-3 py-2 font-bold hover:border-orange-300 hover:text-orange-600">Instagram</a>
+        <a href="https://ao.linkedin.com/in/in%C3%A1cio-firmino-339792216" target="_blank" rel="noreferrer" className="rounded-full border border-stone-200 bg-white px-3 py-2 font-bold hover:border-orange-300 hover:text-orange-600">LinkedIn</a>
+      </div>
+    </div>
+    <p className="mt-5">TopBid · pagamentos verificados · sem pagamentos simulados.</p>
   </footer>;
 
   const InfoPage = ({ title, children }: { title: string; children: ReactNode }) => (
     <><Header/><main className="mx-auto max-w-4xl px-4 py-8 sm:py-12"><section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-10"><h1 className="text-3xl font-black sm:text-4xl">{title}</h1><div className="mt-7 space-y-6 text-sm leading-7 text-stone-600">{children}</div></section></main><Footer/></>
   );
 
-  const ListingRows = ({ rows, heading }: { rows: Listing[]; heading: string }) => (
-    <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+  const ListingRows = ({ rows, heading, page, onPageChange }: { rows: Listing[]; heading: string; page: number; onPageChange: (page:number)=>void }) => {
+    const totalPages = Math.max(1, Math.ceil(rows.length / RANKING_PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const start = rows.length ? (safePage - 1) * RANKING_PAGE_SIZE : 0;
+    const visibleRows = rows.slice(start, start + RANKING_PAGE_SIZE);
+
+    return <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4">
-        <h2 className="font-bold">{heading}</h2><span className="text-xs text-stone-400">{rows.length} resultados</span>
+        <h2 className="font-bold">{heading}</h2><span className="text-xs text-stone-400">{rows.length ? `${start + 1}–${Math.min(start + RANKING_PAGE_SIZE, rows.length)} de ${rows.length}` : "0 resultados"}</span>
       </div>
-      {rows.length === 0 ? <div className="p-10 text-center text-stone-500">Ainda não existem posições confirmadas.</div> : rows.map((item,index) => {
+      {rows.length === 0 ? <div className="p-10 text-center text-stone-500">Ainda não existem posições confirmadas.</div> : visibleRows.map((item,index) => {
+        const absoluteIndex = start + index;
         const image = listingImage(item);
-        const promo = promoMessage(item, index + 1);
+        const promo = promoMessage(item, absoluteIndex + 1);
         return (
-          <article key={item.id} className={`grid gap-4 border-b border-stone-100 px-5 py-5 sm:grid-cols-[64px_64px_1fr_auto] sm:items-center ${index===0 ? "bg-orange-50/50" : "hover:bg-stone-50/70"} transition`}>
-            <div className={`text-lg font-black ${index < 3 ? "text-orange-600" : "text-stone-400"}`}>#{index+1}</div>
+          <article key={item.id} className={`grid gap-4 border-b border-stone-100 px-5 py-5 sm:grid-cols-[64px_78px_1fr_auto] sm:items-center ${absoluteIndex===0 ? "bg-orange-50/50" : "hover:bg-stone-50/70"} transition`}>
+            <div className={`text-lg font-black ${absoluteIndex < 3 ? "text-orange-600" : "text-stone-400"}`}>#{absoluteIndex+1}</div>
             <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="group block" aria-label={`Visitar ${item.title}`}>
-              <img src={image.primary} alt="" className="h-14 w-14 rounded-2xl border border-stone-200 bg-white object-cover shadow-sm" loading="lazy"
-                onError={(e)=>{ if (e.currentTarget.src !== image.fallback) e.currentTarget.src = image.fallback; }} />
+              <img src={image.primary} alt={item.title} className="h-16 w-16 rounded-2xl border border-stone-200 bg-white object-cover shadow-sm" loading="lazy" onError={(e)=>{ if (e.currentTarget.src !== image.fallback) e.currentTarget.src = image.fallback; }} />
             </a>
             <div className="min-w-0">
-              <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="inline-flex max-w-full items-center gap-1 font-bold hover:text-orange-600">
-                <span className="truncate">{item.title}</span><ExternalLink size={13}/>
-              </a>
+              <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="inline-flex max-w-full items-center gap-1 text-base font-black hover:text-orange-600 sm:text-lg"><span className="truncate">{item.title}</span><ExternalLink size={13}/></a>
               <p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p>
-              <p className="mt-2 text-xs font-bold text-orange-700">{promo}</p>
+              <p className="mt-2 text-xs font-semibold text-orange-600">{promo}</p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div>
             </div>
             <div className="flex items-center justify-between gap-4 sm:block sm:text-right">
-              <div className={`text-xl font-black ${index===0 ? "text-orange-600" : ""}`}><AnimatedMoney cents={item.total_paid_cents}/></div>
+              <div className={`text-xl font-black ${absoluteIndex===0 ? "text-orange-600" : ""}`}><AnimatedMoney cents={item.total_paid_cents}/></div>
               <button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button>
             </div>
           </article>
         );
       })}
-    </section>
-  );
+      {rows.length > RANKING_PAGE_SIZE && <div className="flex flex-wrap items-center justify-center gap-2 p-4">
+        <button disabled={safePage===1} onClick={()=>onPageChange(Math.max(1,safePage-1))} className="rounded-full px-3 py-2 text-orange-600 disabled:opacity-30">‹</button>
+        {Array.from({length: totalPages}, (_,i)=>i+1).slice(0,7).map(p=><button key={p} onClick={()=>onPageChange(p)} className={p===safePage ? "h-9 w-9 rounded-full bg-orange-500 font-black text-white" : "h-9 w-9 rounded-full font-bold text-orange-600 hover:bg-orange-50"}>{p}</button>)}
+        {totalPages > 7 && <span className="px-1 text-stone-400">…</span>}
+        <button disabled={safePage===totalPages} onClick={()=>onPageChange(Math.min(totalPages,safePage+1))} className="rounded-full px-3 py-2 text-orange-600 disabled:opacity-30">›</button>
+      </div>}
+    </section>;
+  };
 
   const mainForm = (
     <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
@@ -462,7 +487,7 @@ export default function App() {
   if (route.startsWith("/category/")) {
     const slug = decodeURIComponent(route.slice("/category/".length));
     const rows = listings.filter(x=>x.category?.slug===slug);
-    return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><button onClick={()=>navigate("/categories")} className="mb-5 text-sm font-bold text-orange-600">← Todas as categorias</button><h1 className="text-3xl font-black sm:text-4xl">{slugLabel(slug)}</h1><p className="mt-2 text-stone-500">Ranking da categoria por valor total confirmado.</p><div className="mt-7"><ListingRows rows={rows} heading="Ranking da categoria"/></div></main><Footer/></>;
+    return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12"><button onClick={()=>navigate("/categories")} className="mb-5 text-sm font-bold text-orange-600">← Todas as categorias</button><h1 className="text-3xl font-black sm:text-4xl">{slugLabel(slug)}</h1><p className="mt-2 text-stone-500">Ranking da categoria por valor total confirmado.</p><div className="mt-7"><ListingRows rows={rows} heading="Ranking da categoria" page={categoryPage} onPageChange={setCategoryPage}/></div></main><Footer/></>;
   }
   if (route === "/ranking" || route === "/today" || route === "/daily") {
     const isToday = route === "/today";
@@ -481,7 +506,7 @@ export default function App() {
           </button>
         )}
       </div>}
-      <div className="mt-6"><ListingRows rows={route==="/daily"?dailyListings:rows} heading={isToday?"Today's ranking":route==="/daily"?"Daily · "+selectedDay:"All-time ranking"}/></div>
+      <div className="mt-6"><ListingRows rows={route==="/daily"?dailyListings:rows} heading={isToday?"Today's ranking":route==="/daily"?"Daily · "+selectedDay:"All-time ranking"} page={route==="/daily"?dailyPage:rankingPage} onPageChange={route==="/daily"?setDailyPage:setRankingPage}/></div>
     </main><Footer/></>;
   }
   if (route === "/admin") return <AdminPage navigate={navigate}/>;
@@ -508,7 +533,7 @@ export default function App() {
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4"><div><div className="text-xs font-bold uppercase tracking-widest text-stone-400">total confirmado</div><div className="price-pop mt-1 text-4xl font-black text-orange-600 sm:text-5xl"><AnimatedMoney cents={top.total_paid_cents}/></div></div>
         <div className="text-right text-xs text-stone-400">{top.category?.name}<br/>{top.domain} · {top.clicks} clicks</div></div>
       </article>
-    </section>}    <div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div>
+    </section>}    <div className="mt-8"><ListingRows rows={listings} heading="All-time ranking" page={rankingPage} onPageChange={setRankingPage}/></div>
     </main><Footer/></div>;
 }
 
