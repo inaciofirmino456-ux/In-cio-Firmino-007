@@ -102,7 +102,7 @@ Deno.serve(async(req)=>{
       ? await verifyBitcoin(txHash,quote.recipient_address,expectedUnits)
       : network==="solana"
         ? await verifySolana(txHash,quote.recipient_address,expectedUnits)
-        : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits);
+        : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits,quote.payer_address || undefined);
 
     const {data:result,error:ce}=await sb.rpc("confirm_order_payment",{
       p_order_id:order.id,p_provider:"crypto",p_provider_payment_id:txHash,p_amount_cents:order.charge_cents,
