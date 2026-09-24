@@ -12,6 +12,7 @@ import {
   getOrderStatus,
 } from "./lib/api";
 import { supabase } from "./lib/supabase";
+import { connectEvmWallet, readConnectedEvmWallet, shortAddress } from "./lib/wallet";
 import type { CategoryRecord, Listing } from "./types";
 
 const MIN_BID_USD = 1;
@@ -106,6 +107,9 @@ export default function App() {
   const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; address: string; expiresAt: string } | null>(null);
   const [txHash, setTxHash] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletChainId, setWalletChainId] = useState("");
+  const [walletConnecting, setWalletConnecting] = useState(false);
   const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -173,11 +177,28 @@ export default function App() {
     } finally { setCreating(false); }
   }
 
+  async function handleConnectWallet() {
+    setWalletConnecting(true); setError("");
+    try {
+      const wallet = await connectEvmWallet();
+      setWalletAddress(wallet.address); setWalletChainId(wallet.chainId);
+      setPaymentStatus("Carteira conectada. Os pagamentos EVM deste pedido poderão ser associados ao seu endereço.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível conectar a carteira.");
+    } finally { setWalletConnecting(false); }
+  }
+
+  useEffect(() => {
+    readConnectedEvmWallet().then((wallet) => {
+      if (wallet) { setWalletAddress(wallet.address); setWalletChainId(wallet.chainId); }
+    }).catch(() => undefined);
+  }, []);
+
   async function prepareCrypto(network: string, asset: string) {
     if (!order) return;
     setPaymentLoading(network + asset); setError(""); setPaymentStatus("");
     try {
-      const result = await getCryptoInstructions(order.id, network, asset);
+      const result = await getCryptoInstructions(order.id, network, asset, walletAddress || undefined);
       setCrypto({ network, asset, amount: result.expectedAmount, address: result.receivingAddress, expiresAt: result.expiresAt });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível preparar o pagamento.");
@@ -301,6 +322,23 @@ export default function App() {
       {order && <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5">
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
         <p className="mt-2 text-sm text-stone-600">Escolha o método de pagamento. O ranking só muda depois da confirmação.</p>
+        <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-black">Identificar o pagamento automaticamente</div>
+              <p className="mt-1 text-xs text-stone-500">Conecte uma carteira EVM (Rabby, MetaMask, Coinbase Wallet e outras). O TopBid guarda apenas o endereço público para associar o pagamento a este pedido.</p>
+            </div>
+            <button type="button" onClick={handleConnectWallet} disabled={walletConnecting} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">
+              {walletConnecting ? <Loader2 size={16} className="animate-spin"/> : "🔗"}
+              {walletAddress ? shortAddress(walletAddress) : "Conectar carteira"}
+            </button>
+          </div>
+          {walletAddress && <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded-full bg-green-50 px-3 py-1.5 font-bold text-green-700">✓ Carteira conectada</span>
+            <span className="rounded-full bg-stone-100 px-3 py-1.5 font-mono text-stone-600">{walletAddress}</span>
+            <span className="text-stone-400">chain {parseInt(walletChainId || "0", 16) || walletChainId}</span>
+          </div>}
+        </div>
         <div className="mt-4">
           <p className="text-sm font-bold">Envie para o endereço abaixo</p>
           <p className="mt-1 text-xs text-stone-500">Escolha a rede e o ativo. Envie exatamente o valor mostrado para o endereço de recebimento. O ranking só muda após a verificação on-chain.</p>
@@ -336,7 +374,7 @@ export default function App() {
           <div className="mt-2 font-bold">Enviar exatamente: {crypto.amount} {crypto.asset}</div>
           <div className="mt-3"><input value={txHash} onChange={e=>setTxHash(e.target.value)} placeholder="Cole aqui o TX hash" className="w-full rounded-xl border border-stone-300 px-3 py-3 font-mono text-xs"/></div>
           <button onClick={confirmCrypto} disabled={paymentLoading==="verify"} className="mt-3 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="verify"?"A verificar...":"Verificar pagamento"}</button>
-          <p className="mt-2 text-xs text-stone-500">O servidor verifica rede, ativo, destinatário, valor e confirmações antes de alterar o ranking.</p>
+          <p className="mt-2 text-xs text-stone-500">Com carteira conectada, o endereço público fica associado ao pedido. O servidor verifica rede, ativo, destinatário, valor, remetente e confirmações antes de alterar o ranking.</p>
         </div>}
 {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
