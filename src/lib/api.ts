@@ -35,6 +35,23 @@ export async function getCryptoInstructions(orderId: string, network: string, as
   return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
 }
 
+export interface UrlPreview {
+  valid: boolean;
+  url?: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  favicon?: string;
+  domain?: string;
+  error?: string;
+}
+
+export async function previewUrl(input: string): Promise<UrlPreview> {
+  const trimmed = input.trim();
+  const target = trimmed.startsWith("@") ? "https://x.com/" + trimmed.slice(1) : trimmed;
+  return callFunction<UrlPreview>("preview-url", { url: target });
+}
+
 export async function detectCryptoPayment(orderId: string, network: string, asset: string) {
   const fn = ["ethereum", "bsc", "robinhood_chain"].includes(network) ? "detect-evm-payment" : "detect-crypto-payment";
   return callFunction<{ status: string; detected?: boolean; txHash?: string; confirmations?: number }>(fn, { orderId, network, asset });
