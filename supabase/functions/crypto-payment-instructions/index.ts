@@ -24,7 +24,9 @@ Deno.serve(async(req)=>{
     const orderId=String(body?.orderId||"");
     const network=String(body?.network||"").toLowerCase();
     const asset=String(body?.asset||"").toUpperCase();
+    const payerAddress=String(body?.payerAddress||"").trim();
     if(!orderId||!NETWORKS.has(network)||!ASSETS.has(asset)) return json({error:"INVALID_ORDER_OR_ASSET"},400);
+    if(payerAddress && ["ethereum","bsc","robinhood_chain"].includes(network) && !/^0x[a-fA-F0-9]{40}$/.test(payerAddress)) return json({error:"INVALID_PAYER_ADDRESS"},400);
 
     const compatible =
       (network==="bitcoin" && asset==="BTC") ||
@@ -53,6 +55,7 @@ Deno.serve(async(req)=>{
     const {error:qe}=await sb.from("crypto_payment_quotes").upsert({
       order_id:order.id,network,asset,recipient_address:receiver.address,
       rate_usd:rate,expected_amount:expectedAmount,expected_units:expectedUnits.toString(),
+      payer_address:payerAddress || null,
       decimals,expires_at:expiresAt
     },{onConflict:"order_id,network,asset"});
     if(qe) return json({error:"QUOTE_SAVE_FAILED",detail:qe.message},500);
