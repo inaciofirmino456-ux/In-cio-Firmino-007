@@ -90,6 +90,51 @@ function todayUtc(value: string) {
   return new Date(value).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10);
 }
 
+function stablePick(seed: string, items: string[]) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return items[Math.abs(hash) % items.length];
+}
+
+function promoMessage(item: Listing, rank: number) {
+  const text = [item.title, item.description, item.domain, item.category?.name, item.category?.slug].filter(Boolean).join(" ").toLowerCase();
+  const kind = /instagram|tiktok|youtube|facebook|x\.com|twitter|threads|creator|social|people|profiles/.test(text)
+    ? "creator"
+    : /crypto|web3|blockchain|finance|business|ecommerce|shop|store|agency|company|software|developer|ai|seo|marketing/.test(text)
+      ? "business"
+      : "general";
+
+  const sets: Record<number, string[]> = {
+    1: kind === "creator"
+      ? ["🔥 Está no topo do TopBid — descubra este perfil.", "👑 #1 no TopBid — visite o perfil agora.", "🚀 Este perfil está no topo — veja o conteúdo."]
+      : kind === "business"
+        ? ["🔥 Está no topo do TopBid — descubra esta empresa.", "👑 #1 no TopBid — conheça este projeto.", "🚀 Este projeto está no topo — visite agora."]
+        : ["🔥 Está no topo do TopBid — descubra agora.", "👑 #1 no TopBid — conheça este destaque.", "🚀 Está no topo — veja o que apresenta."],
+    2: ["🚀 Está entre os primeiros do TopBid — descubra agora.", "⭐ #2 no TopBid — conheça este destaque.", "👀 Está em destaque no TopBid — visite agora."],
+    3: ["🥉 Está no top 3 do TopBid — descubra agora.", "⭐ #3 no TopBid — conheça este destaque.", "🚀 Entre os 3 primeiros — visite agora."],
+  };
+
+  const fallback = ["⭐ Está em destaque no TopBid — descubra agora.", "👀 Conheça este destaque do TopBid.", "🚀 Descubra este projeto no TopBid."];
+  return stablePick(item.id + ":" + rank + ":" + kind, sets[rank] ?? fallback);
+}
+
+function listingImage(item: Listing) {
+  const domain = (item.domain || "").replace(/^www\./, "").toLowerCase();
+  const match = item.canonical_url.match(/^https?:\/\/(?:www\.)?(instagram\.com|x\.com|twitter\.com|tiktok\.com|facebook\.com|youtube\.com|threads\.net)\/([^/?#]+)/i);
+  if (match) {
+    const network = match[1].toLowerCase().replace("twitter.com", "x").replace(".com", "").replace(".net", "");
+    const handle = match[2].replace(/^@/, "");
+    return {
+      primary: `https://unavatar.io/${network}/${encodeURIComponent(handle)}`,
+      fallback: `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+    };
+  }
+  return {
+    primary: `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+    fallback: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
+  };
+}
+
 export default function App() {
   const [route, setRoute] = useState(currentPath());
   const [listings, setListings] = useState<Listing[]>([]);
@@ -285,18 +330,34 @@ export default function App() {
 
   const ListingRows = ({ rows, heading }: { rows: Listing[]; heading: string }) => (
     <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4"><h2 className="font-bold">{heading}</h2><span className="text-xs text-stone-400">{rows.length} resultados</span></div>
-      {rows.length === 0 ? <div className="p-10 text-center text-stone-500">Ainda não existem posições confirmadas.</div> : rows.map((item,index) =>
-        <article key={item.id} className={`grid gap-3 border-b border-stone-100 px-5 py-5 sm:grid-cols-[70px_1fr_auto] sm:items-center ${index===0 ? "bg-orange-50/40" : "hover:bg-stone-50/70"} transition`}>
-          <div className="text-lg font-black text-stone-400">#{index+1}</div>
-          <div className="min-w-0">
-            <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="inline-flex max-w-full items-center gap-1 font-bold hover:text-orange-600"><span className="truncate">{item.title}</span><ExternalLink size={13}/></a>
-            <p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div>
-          </div>
-          <div className="flex items-center justify-between gap-4 sm:block sm:text-right"><div className={`text-xl font-black ${index===0 ? "text-orange-600" : ""}`}><AnimatedMoney cents={item.total_paid_cents}/></div><button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button></div>
-        </article>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4">
+        <h2 className="font-bold">{heading}</h2><span className="text-xs text-stone-400">{rows.length} resultados</span>
+      </div>
+      {rows.length === 0 ? <div className="p-10 text-center text-stone-500">Ainda não existem posições confirmadas.</div> : rows.map((item,index) => {
+        const image = listingImage(item);
+        const promo = promoMessage(item, index + 1);
+        return (
+          <article key={item.id} className={`grid gap-4 border-b border-stone-100 px-5 py-5 sm:grid-cols-[64px_64px_1fr_auto] sm:items-center ${index===0 ? "bg-orange-50/50" : "hover:bg-stone-50/70"} transition`}>
+            <div className={`text-lg font-black ${index < 3 ? "text-orange-600" : "text-stone-400"}`}>#{index+1}</div>
+            <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="group block" aria-label={`Visitar ${item.title}`}>
+              <img src={image.primary} alt="" className="h-14 w-14 rounded-2xl border border-stone-200 bg-white object-cover shadow-sm" loading="lazy"
+                onError={(e)=>{ if (e.currentTarget.src !== image.fallback) e.currentTarget.src = image.fallback; }} />
+            </a>
+            <div className="min-w-0">
+              <a href={item.canonical_url} target="_blank" rel="noreferrer" onClick={() => recordClick(item.id)} className="inline-flex max-w-full items-center gap-1 font-bold hover:text-orange-600">
+                <span className="truncate">{item.title}</span><ExternalLink size={13}/>
+              </a>
+              <p className="mt-1 line-clamp-2 text-sm text-stone-500">{item.description}</p>
+              <p className="mt-2 text-xs font-bold text-orange-700">{promo}</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-400"><span>{item.category?.name}</span><span>·</span><span>{item.domain}</span><span>·</span><span>{relativeTime(item.created_at)}</span><span>·</span><span>{item.clicks} clicks</span></div>
+            </div>
+            <div className="flex items-center justify-between gap-4 sm:block sm:text-right">
+              <div className={`text-xl font-black ${index===0 ? "text-orange-600" : ""}`}><AnimatedMoney cents={item.total_paid_cents}/></div>
+              <button onClick={() => {setUrl(item.canonical_url);setCategory(item.category?.slug||"");setBid(item.total_paid_cents/100+1);navigate("/")}} className="text-xs font-bold text-orange-600">Claim for {money(item.total_paid_cents+100)}</button>
+            </div>
+          </article>
+        );
+      })}
     </section>
   );
 
@@ -447,8 +508,7 @@ export default function App() {
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4"><div><div className="text-xs font-bold uppercase tracking-widest text-stone-400">total confirmado</div><div className="price-pop mt-1 text-4xl font-black text-orange-600 sm:text-5xl"><AnimatedMoney cents={top.total_paid_cents}/></div></div>
         <div className="text-right text-xs text-stone-400">{top.category?.name}<br/>{top.domain} · {top.clicks} clicks</div></div>
       </article>
-    </section>}
-    <div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div>
+    </section>}    <div className="mt-8"><ListingRows rows={listings} heading="All-time ranking"/></div>
     </main><Footer/></div>;
 }
 
