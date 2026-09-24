@@ -311,7 +311,7 @@ export default function App() {
         <div className="rounded-2xl bg-stone-950 p-5 text-white"><div className="text-xs uppercase tracking-widest text-stone-400">Target position</div><div className="mt-1 text-4xl font-black">#{projectedRank}</div><div className="mt-2 text-xs text-stone-400">Minimum for #1: {money(Math.round(minForTop*100))}</div></div>
       </div>
       <form onSubmit={submit} className="mt-8 grid gap-3 md:grid-cols-[2fr_1.2fr_1fr_auto]">
-        <div className="min-w-0 md:col-span-2">
+        <div className="min-w-0">
           <div className="relative">
             <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourproduct.com or @handle" className="w-full rounded-xl border border-stone-300 px-4 py-3 pr-28 outline-none focus:border-orange-500"/>
             <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black ${urlChecking ? "text-stone-400" : urlPreview?.valid ? "text-green-600" : urlPreview ? "text-red-600" : "text-stone-400"}`}>
