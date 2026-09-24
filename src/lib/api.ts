@@ -101,6 +101,8 @@ export interface CryptoInstructions {
   network: string;
   asset: string;
   expectedAmount: number;
+  expectedUnits: string;
+  decimals: number;
   receivingAddress: string;
   expiresAt: string;
 }
