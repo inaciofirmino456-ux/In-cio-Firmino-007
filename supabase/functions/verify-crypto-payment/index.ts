@@ -23,6 +23,8 @@ async function rpcCall(url:string,method:string,params:any[]){
 function hex(v:string){return BigInt(v||"0x0")}
 
 async function verifyEvm(network:string,asset:string,txHash:string,recipient:string,expectedUnits:bigint){
+  const expectedAsset = network==="ethereum" || network==="robinhood_chain" ? "ETH" : network==="bsc" ? "BNB" : "";
+  if(asset!==expectedAsset) throw new Error("ASSET_NOT_SUPPORTED_ON_NETWORK");
   const rpc=RPC[network]; if(!rpc) throw new Error("RPC_NOT_CONFIGURED");
   const tx=await rpcCall(rpc,"eth_getTransactionByHash",[txHash]); if(!tx) throw new Error("TRANSACTION_NOT_FOUND");
   const receipt=await rpcCall(rpc,"eth_getTransactionReceipt",[txHash]);
@@ -31,19 +33,7 @@ async function verifyEvm(network:string,asset:string,txHash:string,recipient:str
   const confirmations=Math.max(0,Number(hex(latest)-hex(receipt.blockNumber)));
   const min=Number(Deno.env.get("CRYPTO_MIN_CONFIRMATIONS")||"3");
   if(confirmations<min) throw new Error("INSUFFICIENT_CONFIRMATIONS");
-  let received=0n;
-  if(asset==="ETH"||asset==="BNB"){
-    if(eq(tx.to||"",recipient)) received=hex(tx.value);
-  }else{
-    const contract=CONTRACTS[network+":"+asset] || Deno.env.get((network+"_"+asset+"_CONTRACT").toUpperCase());
-    if(!contract) throw new Error("TOKEN_CONTRACT_NOT_CONFIGURED");
-    const topic="0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a9df523b3ef";
-    for(const log of receipt.logs||[]){
-      if(eq(log.address,contract)&&log.topics?.length>=3&&String(log.topics[0]).toLowerCase()===topic){
-        const to="0x"+String(log.topics[2]).slice(-40); if(eq(to,recipient)) received+=hex(log.data);
-      }
-    }
-  }
+  const received=eq(tx.to||"",recipient) ? hex(tx.value) : 0n;
   if(received!==expectedUnits) throw new Error("AMOUNT_MISMATCH");
   return {confirmations,receivedUnits:received.toString()};
 }
@@ -88,7 +78,13 @@ Deno.serve(async(req)=>{
     const network=String(body?.network||"").toLowerCase();
     const asset=String(body?.asset||"").toUpperCase();
     const txHash=String(body?.txHash||"");
-    if(!orderId||!NETWORKS.has(network)||!asset||!txHash) return json({error:"INVALID_INPUT"},400);
+    const validAsset =
+      (network==="bitcoin" && asset==="BTC") ||
+      (network==="ethereum" && asset==="ETH") ||
+      (network==="solana" && asset==="SOL") ||
+      (network==="bsc" && asset==="BNB") ||
+      (network==="robinhood_chain" && asset==="ETH");
+    if(!orderId||!NETWORKS.has(network)||!validAsset||!txHash) return json({error:"INVALID_INPUT"},400);
 
     const sb=adminClient();
     const {data:order,error:oe}=await sb.from("orders").select("id,charge_cents,status,expires_at").eq("id",orderId).single();
