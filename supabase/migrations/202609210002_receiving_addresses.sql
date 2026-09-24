@@ -7,8 +7,8 @@ create table if not exists public.payment_receiving_addresses (
 );
 
 insert into public.payment_receiving_addresses (network, address) values
-  ('bitcoin', 'bc1qa9fn20r8k58vqspg24qcs4cte76xkxugmufnzr'),
-  ('solana', '89kWAV3yhn8RHYHtmnELuUatRRLcgwyuUgUV4zgJ9Lg'),
+  ('bitcoin', 'bc1qa9fn20r8k58vqspg24qcs4tce76xkxugmufnz'),
+  ('solana', '89kWAV3yhn8RHYHtmnELuUatRRLcgyuUgUVV4zgJ9Lg'),
   ('ethereum', '0x1291637D7635Ca893465CB764e9f2AF18C910109'),
   ('bsc', '0x1291637D7635Ca893465CB764e9f2AF18C910109'),
   ('robinhood_chain', '0x1291637D7635Ca893465CB764e9f2AF18C910109')
