@@ -31,8 +31,8 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return callFunction<Order>('create-order', input);
 }
 
-export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
-  return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
+export async function getCryptoInstructions(orderId: string, network: string, asset: string, payerAddress?: string): Promise<CryptoInstructions> {
+  return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset, payerAddress });
 }
 
 export async function verifyCryptoPayment(orderId: string, network: string, asset: string, txHash: string) {
