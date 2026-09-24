@@ -1,7 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
-const NETWORKS = new Set(["bitcoin","ethereum","bsc"]);
+const NETWORKS = new Set(["bitcoin","ethereum","solana","bsc","robinhood_chain"]);
 const CONTRACTS: Record<string,string|undefined> = {
   "ethereum:USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
   "ethereum:USDC": "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
@@ -11,6 +11,7 @@ const CONTRACTS: Record<string,string|undefined> = {
 const RPC: Record<string,string|undefined> = {
   ethereum: Deno.env.get("ETHEREUM_RPC_URL") || "https://ethereum-rpc.publicnode.com",
   bsc: Deno.env.get("BSC_RPC_URL") || "https://bsc-rpc.publicnode.com",
+  robinhood_chain: Deno.env.get("ROBINHOOD_CHAIN_RPC_URL") || "https://rpc.mainnet.chain.robinhood.com",
 };
 function json(v:unknown,status=200){return new Response(JSON.stringify(v),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 function eq(a:string,b:string){return a.toLowerCase()===b.toLowerCase()}
@@ -102,7 +103,9 @@ Deno.serve(async(req)=>{
     const expectedUnits=BigInt(String(quote.expected_units));
     const verification=network==="bitcoin"
       ? await verifyBitcoin(txHash,quote.recipient_address,expectedUnits)
-      : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits);
+      : network==="solana"
+        ? await verifySolana(txHash,quote.recipient_address,expectedUnits)
+        : await verifyEvm(network,asset,txHash,quote.recipient_address,expectedUnits);
 
     const {data:result,error:ce}=await sb.rpc("confirm_order_payment",{
       p_order_id:order.id,p_provider:"crypto",p_provider_payment_id:txHash,p_amount_cents:order.charge_cents,
