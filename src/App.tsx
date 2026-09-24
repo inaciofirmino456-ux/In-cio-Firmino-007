@@ -9,6 +9,7 @@ import {
   recordClick,
   getCryptoInstructions,
   detectCryptoPayment,
+  previewUrl,
   getOrderStatus,
 } from "./lib/api";
 import { supabase } from "./lib/supabase";
@@ -97,6 +98,8 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().slice(0, 10));
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [url, setUrl] = useState("");
+  const [urlPreview, setUrlPreview] = useState<Awaited<ReturnType<typeof previewUrl>> | null>(null);
+  const [urlChecking, setUrlChecking] = useState(false);
   const [category, setCategory] = useState("");
   const [bid, setBid] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -171,6 +174,28 @@ export default function App() {
       setError(e instanceof Error ? e.message : "Não foi possível criar o pedido.");
     } finally { setCreating(false); }
   }
+
+  useEffect(() => {
+    const value = url.trim();
+    if (!value || (!/^https?:\/\//i.test(value) && !/^www\./i.test(value) && !/^@[^\s/]+$/.test(value))) {
+      setUrlPreview(null);
+      setUrlChecking(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setUrlChecking(true);
+      try {
+        const result = await previewUrl(value);
+        if (!cancelled) setUrlPreview(result);
+      } catch {
+        if (!cancelled) setUrlPreview({ valid: false, error: "Não foi possível analisar este URL agora." });
+      } finally {
+        if (!cancelled) setUrlChecking(false);
+      }
+    }, 650);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [url]);
 
   async function prepareCrypto(network: string, asset: string) {
     if (!order) return;
@@ -286,7 +311,26 @@ export default function App() {
         <div className="rounded-2xl bg-stone-950 p-5 text-white"><div className="text-xs uppercase tracking-widest text-stone-400">Target position</div><div className="mt-1 text-4xl font-black">#{projectedRank}</div><div className="mt-2 text-xs text-stone-400">Minimum for #1: {money(Math.round(minForTop*100))}</div></div>
       </div>
       <form onSubmit={submit} className="mt-8 grid gap-3 md:grid-cols-[2fr_1.2fr_1fr_auto]">
-        <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourproduct.com or @handle" className="min-w-0 rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-orange-500"/>
+        <div className="min-w-0 md:col-span-2">
+          <div className="relative">
+            <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourproduct.com or @handle" className="w-full rounded-xl border border-stone-300 px-4 py-3 pr-28 outline-none focus:border-orange-500"/>
+            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black ${urlChecking ? "text-stone-400" : urlPreview?.valid ? "text-green-600" : urlPreview ? "text-red-600" : "text-stone-400"}`}>
+              {urlChecking ? "A detetar..." : urlPreview?.valid ? "✓ URL válida" : urlPreview ? "URL inválida" : "Deteção automática"}
+            </span>
+          </div>
+          {urlPreview?.valid && (
+            <div className="mt-2 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-3">
+              <img src={urlPreview.image || urlPreview.favicon} alt="" className="h-12 w-12 shrink-0 rounded-xl border border-white bg-white object-cover" onError={(e)=>{ if (urlPreview.favicon && e.currentTarget.src !== urlPreview.favicon) e.currentTarget.src=urlPreview.favicon; }} />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-black text-stone-900">{urlPreview.title || urlPreview.domain}</div>
+                <div className="truncate text-xs text-stone-500">{urlPreview.domain}</div>
+                {urlPreview.description && <div className="mt-0.5 line-clamp-1 text-xs text-stone-500">{urlPreview.description}</div>}
+              </div>
+              <span className="ml-auto shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-black text-green-700">DETECTADO</span>
+            </div>
+          )}
+          {urlPreview && !urlPreview.valid && <p className="mt-2 text-xs font-semibold text-red-600">{urlPreview.error || "URL inválida ou inacessível."}</p>}
+        </div>
         <select value={category} onChange={e=>setCategory(e.target.value)} className="min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3"><option value="">Escolha uma categoria</option>{allCategories.map(c=><option key={c.id} value={c.slug}>{c.name}</option>)}</select>
         <div className="flex overflow-hidden rounded-xl border border-stone-300 bg-white">
           <button type="button" onClick={()=>setBid(Math.max(MIN_BID_USD,bid-1))} className="w-12 text-lg font-black text-stone-500 hover:bg-stone-50">−</button>
