@@ -306,11 +306,9 @@ export default function App() {
             {[
               ["bitcoin","BTC","Bitcoin"],
               ["ethereum","ETH","Ethereum"],
-              ["ethereum","USDT","USDT · Ethereum"],
-              ["bsc","BNB","BNB · BNB Smart Chain"],
-              ["bsc","USDT","USDT · BNB Smart Chain"],
-              ["ethereum","USDC","USDC · Ethereum"],
-              ["bsc","USDC","USDC · BNB Smart Chain"]
+              ["solana","SOL","Solana"],
+              ["bsc","BNB","BNB Smart Chain"],
+              ["robinhood_chain","ETH","Robinhood Chain"]
             ].map(([network,asset,label]) => (
               <button key={network+asset} onClick={()=>prepareCrypto(network,asset)} disabled={!!paymentLoading}
                 className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-left disabled:opacity-50">
@@ -320,8 +318,20 @@ export default function App() {
           </div>
         </div>
         {crypto && <div className="mt-4 rounded-xl bg-white p-4 text-sm">
-          <div className="font-bold">{crypto.asset} · {crypto.network}</div><div className="mt-2 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
-          <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button><div className="mt-2 font-bold">Enviar exatamente: {crypto.amount}</div>
+          <div className="font-bold">{crypto.asset} · {crypto.network}</div>
+          <div className="mt-3 flex justify-center">
+            <img
+              src={`https://quickchart.io/qr?size=180&text=${encodeURIComponent(crypto.address)}`}
+              alt={`QR Code do endereço ${crypto.network}`}
+              width="180"
+              height="180"
+              className="h-[180px] w-[180px] max-w-full rounded-xl border border-stone-200 bg-white p-2"
+              loading="lazy"
+            />
+          </div>
+          <div className="mt-3 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
+          <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button>
+          <div className="mt-2 font-bold">Enviar exatamente: {crypto.amount} {crypto.asset}</div>
           <div className="mt-3"><input value={txHash} onChange={e=>setTxHash(e.target.value)} placeholder="Cole aqui o TX hash" className="w-full rounded-xl border border-stone-300 px-3 py-3 font-mono text-xs"/></div>
           <button onClick={confirmCrypto} disabled={paymentLoading==="verify"} className="mt-3 rounded-xl bg-stone-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{paymentLoading==="verify"?"A verificar...":"Verificar pagamento"}</button>
           <p className="mt-2 text-xs text-stone-500">O servidor verifica rede, ativo, destinatário, valor e confirmações antes de alterar o ranking.</p>
@@ -367,7 +377,7 @@ export default function App() {
   const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/admin" || route.startsWith("/category/");
   if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
 
-  return <div className="min-h-screen bg-[#f7f6f2] text-stone-900"><Header/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+  return <div className="min-h-screen overflow-x-hidden bg-[#f7f6f2] text-stone-900"><Header/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
         <button onClick={()=>navigate("/")} className="rounded-xl bg-stone-950 px-4 py-2 text-xs font-black text-white">Todos</button>
