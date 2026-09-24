@@ -1,15 +1,14 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { adminClient } from "../_shared/supabase.ts";
 
-const NETWORKS = new Set(["bitcoin","ethereum","bsc"]);
-const ASSETS = new Set(["BTC","ETH","BNB","USDT","USDC"]);
-const DECIMALS: Record<string,number> = {BTC:8,ETH:18,BNB:18,USDT:6,USDC:6};
+const NETWORKS = new Set(["bitcoin","ethereum","solana","bsc","robinhood_chain"]);
+const ASSETS = new Set(["BTC","ETH","SOL","BNB"]);
+const DECIMALS: Record<string,number> = {BTC:8,ETH:18,SOL:9,BNB:18};
 
 function json(v:unknown,status=200){return new Response(JSON.stringify(v),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 
 async function usdRate(asset:string){
-  if(asset==="USDT"||asset==="USDC") return 1;
-  const ids:Record<string,string>={BTC:"bitcoin",ETH:"ethereum",BNB:"binancecoin"};
+  const ids:Record<string,string>={BTC:"bitcoin",ETH:"ethereum",SOL:"solana",BNB:"binancecoin"};
   const id=ids[asset]; if(!id) throw new Error("UNSUPPORTED_ASSET");
   const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids="+id+"&vs_currencies=usd");
   if(!r.ok) throw new Error("PRICE_ORACLE_UNAVAILABLE");
@@ -29,8 +28,10 @@ Deno.serve(async(req)=>{
 
     const compatible =
       (network==="bitcoin" && asset==="BTC") ||
-      (network==="ethereum" && ["ETH","USDT","USDC"].includes(asset)) ||
-      (network==="bsc" && ["BNB","USDT","USDC"].includes(asset));
+      (network==="ethereum" && asset==="ETH") ||
+      (network==="solana" && asset==="SOL") ||
+      (network==="bsc" && asset==="BNB") ||
+      (network==="robinhood_chain" && asset==="ETH");
     if(!compatible) return json({error:"ASSET_NOT_SUPPORTED_ON_NETWORK"},400);
 
     const sb=adminClient();
