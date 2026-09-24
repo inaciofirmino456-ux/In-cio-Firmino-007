@@ -107,7 +107,8 @@ export default function App() {
   const [txHash, setTxHash] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [error, setError] = useState("");
-  const [mobileMenu, setMobileMenu] = useState(false);\n  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const navigate = (to: string) => {
     window.history.pushState({}, "", to);
@@ -126,7 +127,8 @@ export default function App() {
       return { ...item, category: rawCategory ? { name: String(rawCategory.name), slug: String(rawCategory.slug) } : undefined } as Listing;
     }));
     setCategories(nextCategories);
-    if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);\n    setLastUpdated(new Date());
+    if (!category && nextCategories[0]) setCategory(nextCategories[0].slug);
+    setLastUpdated(new Date());
   }
 
   useEffect(() => {
