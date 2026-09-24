@@ -49,6 +49,27 @@ export interface UrlPreview {
 export async function previewUrl(input: string): Promise<UrlPreview> {
   const trimmed = input.trim();
   const target = trimmed.startsWith("@") ? "https://x.com/" + trimmed.slice(1) : trimmed;
+
+  // Social profile pages (Instagram, X, Facebook, TikTok, LinkedIn, YouTube and Threads)
+  // often block server-side HTML scraping even when the public profile is valid.
+  // Treat a well-formed public profile URL/handle as valid and let create-order
+  // perform the authoritative server-side validation.
+  const social =
+    /^@[A-Za-z0-9._-]+$/.test(trimmed) ||
+    /^https?:\/\/(?:www\.)?(?:instagram\.com|x\.com|twitter\.com|facebook\.com|tiktok\.com|linkedin\.com|youtube\.com|threads\.net)\/[A-Za-z0-9._@-]+\/?(?:[?#].*)?$/i.test(target);
+
+  if (social) {
+    const domain = new URL(target).hostname.replace(/^www\./, "");
+    return {
+      valid: true,
+      url: target,
+      domain,
+      title: domain === "instagram.com" ? "Perfil do Instagram" : "Perfil público",
+      description: "Perfil público detetado. A validação final é feita pelo servidor.",
+      favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
+    };
+  }
+
   return callFunction<UrlPreview>("preview-url", { url: target });
 }
 
