@@ -36,7 +36,8 @@ export async function getCryptoInstructions(orderId: string, network: string, as
 }
 
 export async function detectCryptoPayment(orderId: string, network: string, asset: string) {
-  return callFunction<{ status: string; detected?: boolean; txHash?: string; confirmations?: number }>('detect-crypto-payment', { orderId, network, asset });
+  const fn = ["ethereum", "bsc", "robinhood_chain"].includes(network) ? "detect-evm-payment" : "detect-crypto-payment";
+  return callFunction<{ status: string; detected?: boolean; txHash?: string; confirmations?: number }>(fn, { orderId, network, asset });
 }
 
 export async function getOrderStatus(orderId: string) {
