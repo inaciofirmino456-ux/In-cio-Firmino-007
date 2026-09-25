@@ -484,43 +484,29 @@ export default function App() {
       {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       {order && <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5">
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
-        <p className="mt-2 text-sm text-stone-600">Escolha o método de pagamento. O ranking só muda depois da confirmação.</p>
-        <div className="mt-4">
-          <p className="text-sm font-bold">Envie para o endereço abaixo</p>
-          <p className="mt-1 text-xs text-stone-500">Escolha a rede e o ativo. Depois, envie exatamente o valor mostrado para o endereço indicado.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["bitcoin","BTC","Bitcoin"],
-              ["ethereum","ETH","Ethereum"],
-              ["solana","SOL","Solana"],
-              ["bsc","BNB","BNB Smart Chain"],
-              ["robinhood_chain","ETH","Robinhood Chain"]
-            ].map(([network,asset,label]) => (
-              <button key={network+asset} onClick={()=>prepareCrypto(network,asset)} disabled={!!paymentLoading}
-                className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-bold text-left disabled:opacity-50">
-                {paymentLoading===network+asset ? "A preparar..." : label}
-              </button>
-            ))}
-          </div>
+        <p className="mt-2 text-sm text-stone-600">Escolha como pagar. O checkout seguro do TopBid abre com cartão, carteiras digitais e stablecoins quando disponíveis.</p>
+        <button
+          onClick={async () => {
+            if (!order) return;
+            setPaymentLoading("dodo");
+            setError("");
+            try {
+              const result = await createDodoCheckout(order.id);
+              window.location.assign(result.checkoutUrl);
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Não foi possível abrir o checkout.");
+              setPaymentLoading("");
+            }
+          }}
+          disabled={paymentLoading === "dodo"}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-950 px-5 py-4 font-black text-white hover:bg-stone-800 disabled:opacity-60"
+        >
+          {paymentLoading === "dodo" ? <><Loader2 className="animate-spin" size={18}/> A abrir checkout seguro...</> : <>Pagar {money(Math.round(order.amount*100))} <ExternalLink size={17}/></>}
+        </button>
+        <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4 text-xs text-stone-500">
+          O pagamento é processado pelo Dodo Payments. O TopBid só atualiza o ranking depois de receber e validar a confirmação do pagamento.
         </div>
-        {crypto && <div className="mt-4 rounded-xl bg-white p-4 text-sm">
-          <div className="font-bold">{crypto.asset} · {crypto.network}</div>
-          <div className="mt-3 flex justify-center">
-            <img
-              src={`https://quickchart.io/qr?size=180&text=${encodeURIComponent(crypto.address)}`}
-              alt={`QR Code do endereço ${crypto.network}`}
-              width="180"
-              height="180"
-              className="h-[180px] w-[180px] max-w-full rounded-xl border border-stone-200 bg-white p-2"
-              loading="lazy"
-            />
-          </div>
-          <div className="mt-3 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
-          <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button>
-          <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3"><div className="font-black text-orange-700">Valor base: ${crypto.amount > 0 ? (crypto.amount * crypto.rateUsd).toFixed(2) : "0.00"} USD</div><div className="mt-1 font-black">Pagar exatamente: {crypto.amount.toLocaleString("en-US", { maximumFractionDigits: crypto.decimals, minimumFractionDigits: Math.min(crypto.decimals, 6) })} {crypto.asset}</div><div className="mt-1 text-xs text-stone-500">Cotação usada: 1 {crypto.asset} = ${crypto.rateUsd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USD</div></div>
-          <p className="mt-2 text-xs text-stone-500">Depois de pagar, aguarde a confirmação para a sua posição ser atualizada.</p>
-        </div>}
-{paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
+        {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
       <p className="mt-4 flex items-center gap-2 text-xs text-stone-500"><ShieldCheck size={14}/> Pagamentos e ranking são validados no servidor. <TrendingUp size={14}/> Dados sincronizados automaticamente.</p>
     </section>
