@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Activity, ArrowRight, CheckCircle2, ExternalLink, Flame, Loader2, Menu, Radio, ShieldCheck, TrendingUp, X, Zap } from "lucide-react";
+import { Activity, ArrowRight, CheckCircle2, ExternalLink, Flame, Loader2, Menu, Moon, Radio, Search, ShieldCheck, TrendingUp, X, Zap } from "lucide-react";
 import {
   createOrder,
   getCategories,
