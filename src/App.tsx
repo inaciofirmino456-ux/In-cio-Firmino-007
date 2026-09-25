@@ -281,26 +281,27 @@ export default function App() {
 
   const Header = () => (
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 font-black tracking-tight" aria-label="TopBid início">
+      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:py-4">
+        <button onClick={() => navigate("/")} className="flex shrink-0 items-center gap-2 font-black tracking-tight" aria-label="TopBid início">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-500 text-white"><Flame size={19}/></span>
           <span className="text-xl">TopBid</span>
         </button>
-        <nav className="hidden items-center gap-5 text-sm font-semibold text-stone-600 md:flex">
-          <button onClick={() => navigate("/ranking")}>Ranking</button>
-          <button onClick={() => navigate("/categories")}>Categorias</button>
-          <button onClick={() => navigate("/how-it-works")}>Como funciona</button>
-          <button onClick={() => navigate("/faq")}>FAQ</button>
-          <button onClick={() => navigate("/rules")}>Regras</button>
+        <nav className="hidden flex-1 items-center justify-center gap-6 text-sm font-semibold text-stone-600 md:flex">
+          <button onClick={() => navigate("/today")} className="hover:text-stone-950">Diário</button>
+          <button onClick={() => navigate("/categories")} className="hover:text-stone-950">Categorias</button>
+          <button onClick={() => navigate("/how-it-works")} className="hover:text-stone-950">Sobre</button>
         </nav>
-        <button className="md:hidden rounded-xl border border-stone-200 p-2" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Abrir menu">
-          {mobileMenu ? <X size={20}/> : <Menu size={20}/>}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => navigate("/ranking")} className="grid h-10 w-10 place-items-center rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50" aria-label="Ranking"><Search size={18}/></button>
+          <button className="hidden h-10 w-10 place-items-center rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 sm:grid" aria-label="Modo escuro"><Moon size={18}/></button>
+          <button className="grid h-10 w-10 place-items-center rounded-xl border border-stone-200 text-stone-700 md:hidden" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Abrir menu">
+            {mobileMenu ? <X size={20}/> : <Menu size={20}/>}
+          </button>
+        </div>
       </div>
       {mobileMenu && <nav className="grid gap-1 border-t border-stone-200 bg-white p-3 md:hidden">
         {[
-          ["/ranking","Ranking"],["/categories","Categorias"],["/how-it-works","Como funciona"],
-          ["/faq","FAQ"],["/rules","Regras"]
+          ["/today","Diário"],["/categories","Categorias"],["/how-it-works","Sobre"],["/ranking","Ranking"],["/faq","FAQ"],["/rules","Regras"]
         ].map(([href,label]) => <button key={href} onClick={() => navigate(href)} className="rounded-xl px-4 py-3 text-left font-semibold hover:bg-stone-50">{label}</button>)}
       </nav>}
     </header>
@@ -323,7 +324,7 @@ export default function App() {
       <div className="border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-2">
           <div
-            className="flex items-center gap-2 overflow-x-auto rounded-full border border-stone-200 bg-stone-50/80 px-2 py-1.5"
+            className="topbid-category-scroller flex items-center gap-1.5 overflow-x-auto px-4 py-2.5 sm:rounded-full sm:border sm:border-stone-200 sm:bg-stone-50/80 sm:px-2 sm:py-1.5"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
           >
             <button
@@ -393,7 +394,7 @@ export default function App() {
   </footer>;
 
   const InfoPage = ({ title, children }: { title: string; children: ReactNode }) => (
-    <><Header/><main className="mx-auto max-w-4xl px-4 py-8 sm:py-12"><section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-10"><h1 className="text-3xl font-black sm:text-4xl">{title}</h1><div className="mt-7 space-y-6 text-sm leading-7 text-stone-600">{children}</div></section></main><Footer/></>
+    <><Header/><CategoryBar/><LiveStrip/><main className="mx-auto max-w-4xl px-4 py-8 sm:py-12"><section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-10"><h1 className="text-3xl font-black sm:text-4xl">{title}</h1><div className="mt-7 space-y-6 text-sm leading-7 text-stone-600">{children}</div></section></main><Footer/></>
   );
 
   const ListingRows = ({ rows, heading, page, onPageChange }: { rows: Listing[]; heading: string; page: number; onPageChange: (page:number)=>void }) => {
@@ -538,7 +539,7 @@ export default function App() {
   if (route === "/ranking" || route === "/today" || route === "/daily") {
     const isToday = route === "/today";
     const rows = isToday ? dailyListings : listings;
-    return <><Header/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+    return <><Header/><CategoryBar/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <div className="flex flex-wrap gap-2">
         <button onClick={()=>navigate("/ranking")} className="rounded-xl border px-4 py-2 text-sm font-bold">All-time</button>
         <button onClick={()=>navigate("/today")} className="rounded-xl border px-4 py-2 text-sm font-bold">Today</button>
