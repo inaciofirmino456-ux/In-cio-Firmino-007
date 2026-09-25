@@ -24,7 +24,7 @@ alter type public.provider_name_dodo rename to provider_name;
 drop type public.provider_name_legacy;
 
 alter table public.orders add constraint orders_supported_provider
-  check (provider is null or provider in ('crypto','dodo')::text::public.provider_name);
+  check (provider is null or provider in ('crypto'::public.provider_name,'dodo'::public.provider_name));
 alter table public.payments add constraint payments_supported_provider
   check (provider in ('crypto','dodo')::text::public.provider_name);
 alter table public.webhook_events add constraint webhook_events_supported_provider
@@ -41,7 +41,7 @@ declare
   v_day date := (now() at time zone 'utc')::date;
   v_payment public.payments;
 begin
-  if p_provider not in ('crypto','dodo')::text::public.provider_name then
+  if p_provider not in ('crypto'::public.provider_name,'dodo'::public.provider_name) then
     raise exception 'unsupported payment provider';
   end if;
   if p_provider='crypto' and p_network not in ('bitcoin','ethereum','solana','bsc','robinhood_chain') then
