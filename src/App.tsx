@@ -268,7 +268,7 @@ export default function App() {
           setPaymentStatus("Pagamento confirmado. O ranking foi atualizado.");
           await refresh();
         } else {
-          setPaymentStatus("Aguardando pagamento... o TopBid verifica a blockchain automaticamente.");
+          setPaymentStatus("Pagamento pendente. A posição será atualizada após a confirmação.");
         }
       } catch {
         if (!stopped) setPaymentStatus("Aguardando pagamento... o TopBid verifica a blockchain automaticamente.");
@@ -484,18 +484,9 @@ export default function App() {
       {order && <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5">
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
         <p className="mt-2 text-sm text-stone-600">Escolha o método de pagamento. O ranking só muda depois da confirmação.</p>
-        <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-600"/>
-            <div>
-              <div className="text-sm font-black text-green-800">Pagamento detetado automaticamente</div>
-              <p className="mt-1 text-xs leading-5 text-green-700">Não precisa conectar carteira e não precisa enviar TX Hash. Envie exatamente o valor mostrado para o endereço indicado. O servidor verifica a blockchain e confirma o pedido automaticamente.</p>
-            </div>
-          </div>
-        </div>
         <div className="mt-4">
           <p className="text-sm font-bold">Envie para o endereço abaixo</p>
-          <p className="mt-1 text-xs text-stone-500">Escolha a rede e o ativo. Envie exatamente o valor mostrado para o endereço de recebimento. O ranking só muda após a verificação on-chain.</p>
+          <p className="mt-1 text-xs text-stone-500">Escolha a rede e o ativo. Depois, envie exatamente o valor mostrado para o endereço indicado.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["bitcoin","BTC","Bitcoin"],
@@ -526,7 +517,7 @@ export default function App() {
           <div className="mt-3 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
           <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button>
           <div className="mt-2 font-bold">Pagar exatamente: {crypto.amount} {crypto.asset}</div>
-          <p className="mt-2 text-xs text-stone-500">Não precisa copiar TX Hash. O TopBid procura automaticamente a transferência recebida na blockchain e, quando estiver confirmada, atualiza o ranking.</p>
+          <p className="mt-2 text-xs text-stone-500">Depois de pagar, aguarde a confirmação para a sua posição ser atualizada.</p>
         </div>}
 {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
