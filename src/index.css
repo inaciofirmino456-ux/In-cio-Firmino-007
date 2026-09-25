@@ -51,3 +51,10 @@
 @media (prefers-reduced-motion: reduce) {
   .live-dot, .ticker-track, .rank-one-card, .price-pop { animation: none; }
 }
+
+.topbid-category-scroller::-webkit-scrollbar { display: none; }
+.topbid-category-scroller { scrollbar-width: none; }
+@media (max-width: 640px) {
+  .topbid-category-scroller { margin-inline: 0; scroll-snap-type: x proximity; }
+  .topbid-category-scroller > button { scroll-snap-align: center; }
+}
