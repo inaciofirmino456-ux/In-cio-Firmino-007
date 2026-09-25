@@ -3,8 +3,9 @@ const root=document.querySelector("#posts");
 for(const p of saved){
   const a=document.createElement("article");
   a.className="card";
-  a.innerHTML='<div class="visual" style="'+(p.image?'background:url('+JSON.stringify(p.image)+') center/cover':'')+'">'+(p.image?'':'NOVIDADE')+'</div><div class="card-body"><h3>'+safe(p.title)+'</h3><p>'+safe(p.description)+'</p></div>';
-  root.prepend(a)
+  const image=p.image?'<img class="card-image" src="'+safe(p.image)+'" alt="'+safe(p.title)+'" loading="lazy">':'<div class="card-image" style="display:grid;place-items:center;background:#d8cbbb">NOVIDADE</div>';
+  a.innerHTML=image+'<div class="card-body"><span class="card-kicker">NOVIDADE</span><h3>'+safe(p.title)+'</h3><p>'+safe(p.description)+'</p></div>';
+  root.prepend(a);
 }
 function safe(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 const menu=document.querySelector(".menu-toggle");
