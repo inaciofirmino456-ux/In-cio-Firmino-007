@@ -400,7 +400,7 @@ export default function App() {
           <div className="relative">
             <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://yourproduct.com or @handle" className="w-full rounded-xl border border-stone-300 px-4 py-3 pr-28 outline-none focus:border-orange-500"/>
             <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black ${urlChecking ? "text-stone-400" : urlPreview?.valid ? "text-green-600" : urlPreview ? "text-red-600" : "text-stone-400"}`}>
-              {urlChecking ? "A detetar..." : urlPreview?.valid ? "✓ URL válida" : urlPreview ? "URL inválida" : "Deteção automática"}
+              
             </span>
           </div>
           {urlPreview?.valid && (
@@ -412,9 +412,9 @@ export default function App() {
                   <div className="mt-1 break-all text-xs font-semibold text-stone-500">{urlPreview.url || urlPreview.domain}</div>
                   {urlPreview.description && <div className="mt-1 whitespace-normal break-words text-xs leading-5 text-stone-600">{urlPreview.description}</div>}
                 </div>
-                <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-black text-green-700">DETECTADO</span>
+                
               </div>
-              <div className="border-t border-green-200 px-3 py-2 text-[11px] font-semibold text-green-800">Pré-visualização completa · URL confirmada</div>
+              
             </div>
           )}
           {urlPreview && !urlPreview.valid && <p className="mt-2 text-xs font-semibold text-red-600">{urlPreview.error || "URL inválida ou inacessível."}</p>}
