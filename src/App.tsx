@@ -334,7 +334,6 @@ export default function App() {
       <div><div className="font-bold text-stone-700">TopBid</div><div className="mt-1">Criado por <strong className="text-orange-600">@inaciofirmino</strong></div></div>
       <div className="flex flex-wrap gap-2">
         <a href="https://www.instagram.com/inaciofirmino07/" target="_blank" rel="noreferrer" className="rounded-full border border-stone-200 bg-white px-3 py-2 font-bold hover:border-orange-300 hover:text-orange-600">Instagram</a>
-        <a href="https://ao.linkedin.com/in/in%C3%A1cio-firmino-339792216" target="_blank" rel="noreferrer" className="rounded-full border border-stone-200 bg-white px-3 py-2 font-bold hover:border-orange-300 hover:text-orange-600">LinkedIn</a>
       </div>
     </div>
     <p className="mt-5">TopBid · pagamentos verificados · sem pagamentos simulados.</p>
