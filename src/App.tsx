@@ -152,7 +152,7 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [order, setOrder] = useState<{ id: string; amount: number } | null>(null);
   const [paymentLoading, setPaymentLoading] = useState("");
-  const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; expectedUnits: string; decimals: number; address: string; expiresAt: string } | null>(null);
+  const [crypto, setCrypto] = useState<{ network: string; asset: string; amount: number; rateUsd: number; expectedUnits: string; decimals: number; address: string; expiresAt: string } | null>(null);
   const [paymentStatus, setPaymentStatus] = useState("");
   const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -251,7 +251,7 @@ export default function App() {
     setPaymentLoading(network + asset); setError(""); setPaymentStatus("");
     try {
       const result = await getCryptoInstructions(order.id, network, asset);
-      setCrypto({ network, asset, amount: result.expectedAmount, expectedUnits: result.expectedUnits, decimals: result.decimals, address: result.receivingAddress, expiresAt: result.expiresAt });
+      setCrypto({ network, asset, amount: result.expectedAmount, rateUsd: result.rateUsd, expectedUnits: result.expectedUnits, decimals: result.decimals, address: result.receivingAddress, expiresAt: result.expiresAt });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível preparar o pagamento.");
     } finally { setPaymentLoading(""); }
@@ -517,7 +517,7 @@ export default function App() {
           </div>
           <div className="mt-3 break-all rounded-lg bg-stone-50 p-3 font-mono text-xs">{crypto.address}</div>
           <button onClick={()=>navigator.clipboard?.writeText(crypto.address)} className="mt-2 rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold">Copiar endereço</button>
-          <div className="mt-2 font-bold">Pagar exatamente: {crypto.amount} {crypto.asset}</div>
+          <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3"><div className="font-black text-orange-700">Valor base: ${crypto.amount > 0 ? (crypto.amount * crypto.rateUsd).toFixed(2) : "0.00"} USD</div><div className="mt-1 font-black">Pagar exatamente: {crypto.amount.toLocaleString("en-US", { maximumFractionDigits: crypto.decimals, minimumFractionDigits: Math.min(crypto.decimals, 6) })} {crypto.asset}</div><div className="mt-1 text-xs text-stone-500">Cotação usada: 1 {crypto.asset} = ${crypto.rateUsd.toLocaleString("en-US", { maximumFractionDigits: 2 })} USD</div></div>
           <p className="mt-2 text-xs text-stone-500">Depois de pagar, aguarde a confirmação para a sua posição ser atualizada.</p>
         </div>}
 {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
