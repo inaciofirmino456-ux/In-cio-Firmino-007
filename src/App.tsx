@@ -562,13 +562,12 @@ export default function App() {
   if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
 
   return <div className="min-h-screen overflow-x-hidden bg-[#f7f6f2] text-stone-900"><Header/><CategoryBar/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
-        <button onClick={()=>navigate("/")} className="rounded-xl bg-stone-950 px-4 py-2 text-xs font-black text-white">Todos</button>
-        <button onClick={()=>navigate("/ranking")} className="rounded-xl px-4 py-2 text-xs font-bold text-stone-500 hover:bg-stone-50">Classificações</button>
-        <button onClick={()=>navigate("/categories")} className="rounded-xl px-4 py-2 text-xs font-bold text-stone-500 hover:bg-stone-50">Explorar</button>
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="inline-flex rounded-full border border-stone-200 bg-white p-1 shadow-sm">
+        <button onClick={()=>navigate("/")} className="rounded-full bg-stone-950 px-4 py-2 text-xs font-black text-white">Todos</button>
+        <button onClick={()=>navigate("/today")} className="rounded-full px-4 py-2 text-xs font-bold text-stone-500 hover:bg-stone-50">Hoje</button>
       </div>
-      <div className="flex items-center gap-2 text-xs font-semibold text-stone-500"><span className="live-dot"/>{listings.length.toLocaleString("en-US")} posições sincronizadas</div>
+      <div className="flex items-center gap-3 text-xs font-semibold text-stone-500"><span className="flex items-center gap-1.5"><span className="live-dot"/> online</span><span>{listings.length.toLocaleString("en-US")} posições</span></div>
     </div>
     {mainForm}
     {top && <section className="mt-8">
