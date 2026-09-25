@@ -31,6 +31,10 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return callFunction<Order>('create-order', input);
 }
 
+export async function createDodoCheckout(orderId: string): Promise<{ checkoutUrl: string; sessionId?: string }> {
+  return callFunction<{ checkoutUrl: string; sessionId?: string }>('dodo-checkout', { orderId });
+}
+
 export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
   return callFunction<CryptoInstructions>('crypto-payment-instructions', { orderId, network, asset });
 }
