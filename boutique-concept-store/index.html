@@ -7,16 +7,48 @@
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<header class="nav"><a class="logo" href="#inicio">BOUTIQUE <span>CONCEPT STORE</span></a><nav><a href="#colecao">Coleção</a><a href="#sobre">A loja</a><a href="#contactos">Contactos</a><a class="owner" href="./admin.html">Área do proprietário</a></nav></header>
+<header class="nav">
+  <a class="logo" href="#inicio">BOUTIQUE <span>CONCEPT STORE</span></a>
+  <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">Menu</button>
+  <nav id="site-menu">
+    <a href="#colecao">Coleção</a><a href="#galeria">Galeria</a><a href="#sobre">A loja</a><a href="#contactos">Contactos</a><a class="owner" href="./admin.html">Área do proprietário</a>
+  </nav>
+</header>
 <main>
-<section id="inicio" class="hero"><div class="hero-copy"><p class="eyebrow">PORTO · PORTUGAL</p><h1>Uma janela para o melhor de Portugal.</h1><p>Design português, artesanato e objetos de lifestyle escolhidos para quem procura peças com identidade.</p><a class="btn" href="#colecao">Explorar</a></div><div class="hero-photo"><img src="https://www.corner.inc/place/pQdksMx6ukM3" alt="Boutique Concept Store no Porto"></div></section>
-<section id="colecao" class="section"><p class="eyebrow">CURADORIA</p><h2>Descobertas portuguesas</h2><div id="posts" class="cards">
-<article class="card"><div class="visual v1">CERÂMICA</div><div class="card-body"><h3>Casa & decoração</h3><p>Peças de criadores portugueses para dar personalidade ao seu espaço.</p></div></article>
-<article class="card"><div class="visual v2">ARTESANATO</div><div class="card-body"><h3>Design português</h3><p>Objetos, acessórios e presentes com uma história por trás.</p></div></article>
-<article class="card"><div class="visual v3">AROMA</div><div class="card-body"><h3>Sabonaria & fragrâncias</h3><p>Cuidados pessoais e aromas de marcas portuguesas.</p></div></article>
-</div></section>
-<section id="sobre" class="about"><div><p class="eyebrow">A LOJA</p><h2>Autenticidade, originalidade e criatividade.</h2></div><div><p>A Boutique Concept Store apresenta uma seleção de produtos portugueses de decoração, artesanato e lifestyle. A empresa descreve a sua proposta como uma janela para o talento e a produção portuguesa.</p><p class="muted">Informações públicas devem ser confirmadas pelo proprietário antes da publicação comercial definitiva.</p></div></section>
+<section id="inicio" class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">PORTO · PORTUGAL</p>
+    <h1>Uma janela para o melhor de Portugal.</h1>
+    <p>Uma concept store dedicada a criadores portugueses, com cerâmica, cortiça, fragrâncias, joalharia, artesanato e objetos para a casa.</p>
+    <a class="btn" href="#colecao">Explorar coleção</a>
+  </div>
+  <div class="hero-photo">
+    <img src="https://cdn.corner.inc/place-photo/ATKogpfk2JKD6s2RGCQjFMb7-Ii2IJsrpUVOeYnK6eXUqJrM0xkTRP1ahuhD1Ud01jBYHien9EeFaUaeHjiwMHekv4H2XvHpv63Gm_BpCP4wPRhdmm5UMp3T3QTWwrIfUnuTszHJF-6UPsbErOgOCqrBF0yC5QJKf0lOjuTsSd9In2lu_xLzGkBx8EtzSb77my7JI1PBOvba3iMaBzYbkNlkTN96qmuwxrm0X5gs8XHjhA1bS7675cFy8KbmlEnaFPhFIB0qhJtheWOOGdAKIzIKQ2HJe1Rt6tqpVK7YvtM8k2apjnXsA7BQdVG0wFgyCzXf-BKD0dCIRKaw-xs07lQ8rYTBsO9wWJdYZkOKpeP3bkO2-8gKD5JvcHDzthn0zPzxqmRIy2jSdj4kWIegGzwgKPqHeDNS6s7771_0uv728ttjiOF5zbL_8han8q6hfWxqRGMq-thGTNh6t4fALqtPq3ZEnGQFIAZgRdFwd2uF7_qxK0trnBhXovOGvRUsX1aKvFBInPVKhc-4eQNeie13EDvLOn3fjpTF_aNhB8IzEigOKsNVYBVxMUTI2KpT0OIFwb0E6ldl6utUC9TlM7-2aPFgMgxtTSHIUq8KioqNhgawePCqXhbj9tvel6bCwayaW72NJA.jpeg/resolution%3D720" alt="Produtos artesanais portugueses na Boutique Concept Store" loading="eager">
+  </div>
+</section>
+
+<section id="colecao" class="section">
+  <p class="eyebrow">CURADORIA</p><h2>Feito em Portugal</h2>
+  <div id="posts" class="cards">
+    <article class="card"><img class="card-image" src="https://cdn.corner.inc/place-photo/ATKogpfk2JKD6s2RGCQjFMb7-Ii2IJsrpUVOeYnK6eXUqJrM0xkTRP1ahuhD1Ud01jBYHien9EeFaUaeHjiwMHekv4H2XvHpv63Gm_BpCP4wPRhdmm5UMp3T3QTWwrIfUnuTszHJF-6UPsbErOgOCqrBF0yC5QJKf0lOjuTsSd9In2lu_xLzGkBx8EtzSb77my7JI1PBOvba3iMaBzYbkNlkTN96qmuwxrm0X5gs8XHjhA1bS7675cFy8KbmlEnaFPhFIB0qhJtheWOOGdAKIzIKQ2HJe1Rt6tqpVK7YvtM8k2apjnXsA7BQdVG0wFgyCzXf-BKD0dCIRKaw-xs07lQ8rYTBsO9wWJdYZkOKpeP3bkO2-8gKD5JvcHDzthn0zPzxqmRIy2jSdj4kWIegGzwgKPqHeDNS6s7771_0uv728ttjiOF5zbL_8han8q6hfWxqRGMq-thGTNh6t4fALqtPq3ZEnGQFIAZgRdFwd2uF7_qxK0trnBhXovOGvRUsX1aKvFBInPVKhc-4eQNeie13EDvLOn3fjpTF_aNhB8IzEigOKsNVYBVxMUTI2KpT0OIFwb0E6ldl6utUC9TlM7-2aPFgMgxtTSHIUq8KioqNhgawePCqXhbj9tvel6bCwayaW72NJA.jpeg/resolution%3D720" alt="Peças artesanais" loading="lazy"><div class="card-body"><h3>Cerâmica & casa</h3><p>Peças artesanais e objetos portugueses para dar personalidade ao seu espaço.</p></div></article>
+    <article class="card"><img class="card-image" src="https://cdn.corner.inc/place-photo/ATKogpcQ8is6CKvKMIw63SOsb3AzaBGJVznWrMZxCc5ZAum6raxJ5R6DHicmz8p04W89ILMS2yz0LRb0mxbP0n0cgUBchqi0D4jwsy8kgWBaoKJ1_jJUQbpML-Rce6ARRew2iIKwJw_nHOo2RUMo9HwtEFnfPYXD4Rguzde2yPl_HOStbe3N17z6YwgwZQ9xavI6NDV2_gMyf2OdbUedUYNrjqrqId70syWq90YNkTrPTAevl_5QzW0NUuwmdvpQQrzJoCaGSPFmJDyWudOjOGGbvDtBwfRKzvZxDa_HHhXdtMvVrV22NYwgXYX58u86q9aXjbivy0scWiu8Jn5eWHBfIHETLgT9-gSmncC8APGgj5wyJuCJHa8ypWpDNWpPbu1rj5Qr7-scO8shcEns2Lirqtw4aVkxdp3Im_2Dcbbt6bIA89vQeRiYk3FuStAKlO9IB5oEcbk50nLgG268bBi0kJkHwFDG9vl_V2qnenuPgvpTcG4WY5m65ifZ3t-W8eyzwAG-gYR5X9lU6thL32IEpxeHHS-L8bi8VMarXwI3tQD3z7Eux6r__2R5s0w_FDbjQweKDiVzcAJNyrculQgQed0DKETk2yvM2TkULchgJVBfRxPOkARFYjNpeZtCzEf2ZelPRMD3.jpeg" alt="Produtos portugueses" loading="lazy"><div class="card-body"><h3>Artesanato & cortiça</h3><p>Design contemporâneo inspirado nos materiais e saberes portugueses.</p></div></article>
+    <article class="card"><img class="card-image" src="https://cdn.corner.inc/place-photo/ATKogpeudYUIxpx2hKtBhpFr2QOyi70NrzQofuJ6_ukckpXS9TOlIZPU2hC8fNifo_W1pwnAeCLwN-PMSoSf5B1hcwWB9zCTv4rvtEKP9TH_KbyvW2NeniJpCFH8SintRU3pR4mPyMDgg4g-DpHds7oE-RMMpKBd31Xl2RrnbBQdVNt9FkR5szLZ0bmyUbRSrLVaRi_FCqFqjpuB03q8ssD4BTH5cp4sbEmFqyPzEiO1T9fmCloPeP49gYZfNwciqrsrp8faarwD9RpgroZ_BMzhmU_DHtpIiTibM_rviOy9iMPOulCaLS6xde70upAiakh8GsSFL7c1KifUxtKCfqhgWmkJwzRrwmg923otWewIvWKJFTMnmtkG9RPRvkVC-zr4onY-VFvHXsodPuuFd1DLMR3bVmUVtlE1teFIMVuCN2bYk-klF924QKqasbLXUvrosik411OQqkVKoMUeKw0Q0FxhAm0gvNECNCjfag2GwCDLppTGAabSwM-pSDTKhdehy4m0dJI_Ey29i2emrvOj1mmujkA8UHRN0ewjGihV86nmgD0ldL-5Uuho5wTCU3SOpUpNQM1XnfKe_SlnlfxtcTWdKnLC3fyoJoGUZmk3wGAivU3Y36oQxBmFyvlRL69vSgLNLQ.jpeg" alt="Fragrâncias e sabonaria" loading="lazy"><div class="card-body"><h3>Saboaria & fragrâncias</h3><p>Aromas, cuidados pessoais e presentes de marcas e criadores portugueses.</p></div></article>
+  </div>
+</section>
+
+<section id="galeria" class="gallery section">
+  <p class="eyebrow">A LOJA</p><h2>Um espaço para descobrir.</h2>
+  <div class="gallery-grid">
+    <img src="https://cdn.corner.inc/place-photo/ATKogpfk2JKD6s2RGCQjFMb7-Ii2IJsrpUVOeYnK6eXUqJrM0xkTRP1ahuhD1Ud01jBYHien9EeFaUaeHjiwMHekv4H2XvHpv63Gm_BpCP4wPRhdmm5UMp3T3QTWwrIfUnuTszHJF-6UPsbErOgOCqrBF0yC5QJKf0lOjuTsSd9In2lu_xLzGkBx8EtzSb77my7JI1PBOvba3iMaBzYbkNlkTN96qmuwxrm0X5gs8XHjhA1bS7675cFy8KbmlEnaFPhFIB0qhJtheWOOGdAKIzIKQ2HJe1Rt6tqpVK7YvtM8k2apjnXsA7BQdVG0wFgyCzXf-BKD0dCIRKaw-xs07lQ8rYTBsO9wWJdYZkOKpeP3bkO2-8gKD5JvcHDzthn0zPzxqmRIy2jSdj4kWIegGzwgKPqHeDNS6s7771_0uv728ttjiOF5zbL_8han8q6hfWxqRGMq-thGTNh6t4fALqtPq3ZEnGQFIAZgRdFwd2uF7_qxK0trnBhXovOGvRUsX1aKvFBInPVKhc-4eQNeie13EDvLOn3fjpTF_aNhB8IzEigOKsNVYBVxMUTI2KpT0OIFwb0E6ldl6utUC9TlM7-2aPFgMgxtTSHIUq8KioqNhgawePCqXhbj9tvel6bCwayaW72NJA.jpeg/resolution%3D720" alt="Boutique Concept Store" loading="lazy">
+    <img src="https://cdn.corner.inc/place-photo/ATKogpfk2JKD6s2RGCQjFMb7-Ii2IJsrpUVOeYnK6eXUqJrM0xkTRP1ahuhD1Ud01jBYHien9EeFaUaeHjiwMHekv4H2XvHpv63Gm_BpCP4wPRhdmm5UMp3T3QTWwrIfUnuTszHJF-6UPsbErOgOCqrBF0yC5QJKf0lOjuTsSd9In2lu_xLzGkBx8EtzSb77my7JI1PBOvba3iMaBzYbkNlkTN96qmuwxrm0X5gs8XHjhA1bS7675cFy8KbmlEnaFPhFIB0qhJtheWOOGdAKIzIKQ2HJe1Rt6tqpVK7YvtM8k2apjnXsA7BQdVG0wFgyCzXf-BKD0dCIRKaw-xs07lQ8rYTBsO9wWJdYZkOKpeP3bkO2-8gKD5JvcHDzthn0zPzxqmRIy2jSdj4kWIegGzwgKPqHeDNS6s7771_0uv728ttjiOF5zbL_8han8q6hfWxqRGMq-thGTNh6t4fALqtPq3ZEnGQFIAZgRdFwd2uF7_qxK0trnBhXovOGvRUsX1aKvFBInPVKhc-4eQNeie13EDvLOn3fjpTF_aNhB8IzEigOKsNVYBVxMUTI2KpT0OIFwb0E6ldl6utUC9TlM7-2aPFgMgxtTSHIUq8KioqNhgawePCqXhbj9tvel6bCwayaW72NJA.jpeg/resolution%3D720" alt="Detalhes da loja" loading="lazy">
+  </div>
+  <p class="photo-note">Fotografias públicas encontradas na página da Boutique Concept Store no Corner. Se a loja fornecer fotografias próprias, substitui estas imagens pelas fotografias autorizadas da marca.</p>
+</section>
+
+<section id="sobre" class="about"><div><p class="eyebrow">A LOJA</p><h2>Autenticidade, originalidade e criatividade.</h2></div><div><p>A Boutique Concept Store, na Rua de Mouzinho da Silveira 279, apresenta uma seleção de produtos portugueses e trabalhos de criadores locais, incluindo cerâmica, cortiça, fragrâncias, joalharia e artesanato.</p><p class="muted">A seleção e disponibilidade dos produtos podem mudar. Confirma as informações comerciais antes de publicar campanhas ou preços.</p></div></section>
+
 <section id="contactos" class="contact"><div><p class="eyebrow">VISITE-NOS</p><h2>Porto</h2><p>Rua de Mouzinho da Silveira 279, 4000-069 Porto, Portugal</p><p><strong>+351 914 450 094</strong></p><a class="btn dark" href="https://linktr.ee/boutiqueconcept" target="_blank" rel="noopener">Instagram · Facebook · WhatsApp</a></div><div class="hours"><h3>Horário publicado</h3><p>Seg–Sáb · 10:00–13:30 e 14:30–19:00<br>Dom · 10:00–19:00</p></div></section>
-</main><footer><span>BOUTIQUE CONCEPT STORE</span><span>PORTO · PORTUGAL</span></footer>
+</main>
+<footer><span>BOUTIQUE CONCEPT STORE</span><span>PORTO · PORTUGAL</span></footer>
 <script src="./app.js"></script>
 </body></html>
