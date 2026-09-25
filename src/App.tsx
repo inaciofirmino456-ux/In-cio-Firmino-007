@@ -306,6 +306,39 @@ export default function App() {
     </header>
   );
 
+  const CategoryBar = () => {
+    const activeSlug = route.startsWith("/category/") ? decodeURIComponent(route.slice("/category/".length)) : "";
+    return (
+      <div className="border-b border-stone-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-stone-200 bg-stone-50/80 px-2 py-1.5" style={{ scrollbarWidth: "none" }}>
+            <button
+              onClick={() => navigate("/")}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-black transition ${!activeSlug && route === "/" ? "bg-orange-500 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`}
+            >
+              Todos
+            </button>
+            {allCategories.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigate("/category/" + item.slug)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${activeSlug === item.slug ? "bg-orange-500 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`}
+              >
+                {item.name}
+              </button>
+            ))}
+            <button
+              onClick={() => navigate("/categories")}
+              className="shrink-0 rounded-full px-4 py-2 text-sm font-black text-orange-600 hover:bg-white"
+            >
+              Explorar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const LiveStrip = () => (
     <div className="border-b border-orange-100 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-2">
@@ -516,7 +549,7 @@ export default function App() {
   const knownRoute = route === "/" || route === "/ranking" || route === "/today" || route === "/daily" || route === "/categories" || route === "/how-it-works" || route === "/faq" || route === "/rules" || route === "/admin" || route.startsWith("/category/");
   if (!knownRoute) return <InfoPage title="404"><p>A página que procuras não existe.</p><button onClick={()=>navigate("/")} className="rounded-xl bg-orange-500 px-5 py-3 font-bold text-white">Voltar ao início</button></InfoPage>;
 
-  return <div className="min-h-screen overflow-x-hidden bg-[#f7f6f2] text-stone-900"><Header/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+  return <div className="min-h-screen overflow-x-hidden bg-[#f7f6f2] text-stone-900"><Header/><CategoryBar/><LiveStrip/><main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
         <button onClick={()=>navigate("/")} className="rounded-xl bg-stone-950 px-4 py-2 text-xs font-black text-white">Todos</button>
