@@ -308,12 +308,27 @@ export default function App() {
 
   const CategoryBar = () => {
     const activeSlug = route.startsWith("/category/") ? decodeURIComponent(route.slice("/category/".length)) : "";
+    const scrollToCategory = (slug: string) => {
+      navigate(slug ? "/category/" + slug : "/");
+      requestAnimationFrame(() => {
+        document.querySelector(`[data-category-slug="${slug || "all"}"]`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      });
+    };
+
     return (
       <div className="border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-2">
-          <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-stone-200 bg-stone-50/80 px-2 py-1.5" style={{ scrollbarWidth: "none" }}>
+          <div
+            className="flex items-center gap-2 overflow-x-auto rounded-full border border-stone-200 bg-stone-50/80 px-2 py-1.5"
+            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+          >
             <button
-              onClick={() => navigate("/")}
+              data-category-slug="all"
+              onClick={() => scrollToCategory("")}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-black transition ${!activeSlug && route === "/" ? "bg-orange-500 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`}
             >
               Todos
@@ -321,14 +336,19 @@ export default function App() {
             {allCategories.map((item) => (
               <button
                 key={item.id}
-                onClick={() => navigate("/category/" + item.slug)}
+                data-category-slug={item.slug}
+                onClick={() => scrollToCategory(item.slug)}
                 className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${activeSlug === item.slug ? "bg-orange-500 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`}
               >
                 {item.name}
               </button>
             ))}
             <button
-              onClick={() => navigate("/categories")}
+              data-category-slug="explore"
+              onClick={() => {
+                navigate("/categories");
+                requestAnimationFrame(() => document.querySelector('[data-category-slug="explore"]')?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }));
+              }}
               className="shrink-0 rounded-full px-4 py-2 text-sm font-black text-orange-600 hover:bg-white"
             >
               Explorar
