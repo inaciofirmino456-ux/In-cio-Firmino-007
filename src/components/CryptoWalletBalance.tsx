@@ -117,7 +117,7 @@ export default function CryptoWalletBalance() {
           </div>
           <div className="mt-4">
             <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Saldo disponível · {option.asset}</div>
-            <div className="mt-1 text-2xl font-black text-stone-950">{loading ? "A consultar..." : balance ? `${balance} ${option.asset}` : "0 ${option.asset}"}</div>
+            <div className="mt-1 text-2xl font-black text-stone-950">{loading ? "A consultar..." : `${balance || "0"} ${option.asset}`}</div>
           </div>
           {error && <div className="mt-3 text-xs font-semibold text-red-600">{error}</div>}
         </div>
