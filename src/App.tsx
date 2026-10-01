@@ -14,6 +14,7 @@ import {
 } from "./lib/api";
 import { supabase } from "./lib/supabase";
 import type { CategoryRecord, Listing } from "./types";
+import CryptoWalletBalance from "./components/CryptoWalletBalance";
 
 const MIN_BID_USD = 1;
 const MAX_BID_USD = 999999;
@@ -485,6 +486,7 @@ export default function App() {
       {order && <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5">
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
         <p className="mt-2 text-sm text-stone-600">Escolha como pagar. O checkout seguro do TopBid abre com cartão, carteiras digitais e stablecoins quando disponíveis.</p>
+        <CryptoWalletBalance />
         <button
           onClick={async () => {
             if (!order) return;
