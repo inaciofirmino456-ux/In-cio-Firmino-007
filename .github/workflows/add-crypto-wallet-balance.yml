@@ -1,0 +1,37 @@
+name: Add crypto wallet balance UI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add crypto wallet balance panel
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/App.tsx')
+          s=p.read_text()
+          if 'CryptoWalletBalance' not in s:
+              s=s.replace('import type { CategoryRecord, Listing } from "./types";\n', 'import type { CategoryRecord, Listing } from "./types";\nimport CryptoWalletBalance from "./components/CryptoWalletBalance";\n')
+              marker='''        <button\n          onClick={async () => {'''
+              pos=s.find(marker, s.find('      {order && <div'))
+              if pos < 0:
+                  raise SystemExit('order payment button not found')
+              block='''        <CryptoWalletBalance />\n'''
+              s=s[:pos]+block+s[pos:]
+              p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "TopBid Bot"
+          git config user.email "actions@github.com"
+          git add src/App.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: show crypto wallet balance after connection"
+          git push
