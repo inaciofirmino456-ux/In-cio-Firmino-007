@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="theme-color" content="#07070a" />
+  <meta name="description" content="FIRMI AI — creative AI studio and model training workspace." />
+  <title>FIRMI AI — AI Studio</title>
+  <link rel="stylesheet" href="/fimai-site.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="/fimai.html"><span class="brand-mark">F</span><span>FIRMI<span class="accent">AI</span></span></a>
+    <nav>
+      <button data-view="studio" class="nav-btn active">Studio</button>
+      <button data-view="models" class="nav-btn">Models</button>
+      <button data-view="training" class="nav-btn">Training</button>
+      <button data-view="docs" class="nav-btn">Docs</button>
+    </nav>
+    <button class="status-pill"><i></i> System online</button>
+    <button class="menu" aria-label="Menu">☰</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span>●</span> FIRMI AI 0.1 · CREATIVE INTELLIGENCE</div>
+      <h1>Turn an idea into<br><em>something real.</em></h1>
+      <p>FIRMI AI is our independent AI workspace for creating, testing and eventually training powerful image and video models.</p>
+      <div class="hero-actions">
+        <button class="primary" data-scroll="workspace">Open Studio <span>↗</span></button>
+        <button class="ghost" data-view="docs">Read the docs</button>
+      </div>
+      <div class="hero-stats"><span><b>01</b> AI Studio</span><span><b>∞</b> Experiments</span><span><b>GPU</b> Ready</span></div>
+    </section>
+
+    <section id="workspace" class="workspace">
+      <aside class="sidebar">
+        <div class="side-label">WORKSPACE</div>
+        <button class="side-btn active" data-tool="create">✦ <span>Create</span></button>
+        <button class="side-btn" data-tool="prompt">⌁ <span>Prompt Lab</span></button>
+        <button class="side-btn" data-tool="history">◷ <span>History</span></button>
+        <div class="side-bottom"><div class="mini-dot"></div><div><b>FIRMI Engine</b><small>Frontend mode</small></div></div>
+      </aside>
+
+      <div class="studio">
+        <div class="studio-head"><div><div class="kicker">AI STUDIO</div><h2>Create with FIRMI</h2></div><span class="chip">Preview mode</span></div>
+        <div class="creator-grid">
+          <div class="control-card">
+            <label>WHAT DO YOU WANT TO CREATE?</label>
+            <textarea id="prompt" placeholder="Describe your image or video idea...">A cinematic futuristic city in Luanda at night, ultra realistic, rain reflections, dramatic lighting</textarea>
+            <div class="row">
+              <button class="type active" data-type="image">Image</button>
+              <button class="type" data-type="video">Video</button>
+            </div>
+            <div class="options">
+              <label>MODEL <select id="model"><option>FIRMI Vision · Preview</option><option>FIRMI Motion · Coming soon</option></select></label>
+              <label>RATIO <select><option>16:9</option><option>9:16</option><option>1:1</option></select></label>
+            </div>
+            <button id="generate" class="generate">Generate <span>✦</span></button>
+            <p class="notice">This website is currently a frontend preview. No external model or GPU is called from this page.</p>
+          </div>
+          <div class="preview-card">
+            <div class="preview-top"><span>OUTPUT</span><span id="outputStatus">READY</span></div>
+            <div id="canvas" class="canvas">
+              <div class="orb"></div>
+              <div class="canvas-copy"><strong>Your creation will appear here.</strong><span>Write a prompt and start an experiment.</span></div>
+            </div>
+            <div class="preview-meta"><span>FIRMI AI</span><span id="metaType">IMAGE · 16:9</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-row">
+      <article><span class="feature-icon">◈</span><h3>Creative workspace</h3><p>A clean place to experiment with prompts, models and outputs.</p></article>
+      <article><span class="feature-icon">⚡</span><h3>GPU ready</h3><p>The FIRMI engine is structured for PyTorch distributed training.</p></article>
+      <article><span class="feature-icon">◫</span><h3>Built to scale</h3><p>From a small experiment today to multi-GPU training tomorrow.</p></article>
+    </section>
+
+    <section id="models" class="models view-section hidden"><div class="section-title"><span>MODELS</span><h2>One workspace. More intelligence.</h2></div><div class="model-grid"><div class="model"><b>FIRMI Vision</b><span>Image generation · Preview</span><i>READY</i></div><div class="model"><b>FIRMI Motion</b><span>Video generation · Roadmap</span><i>SOON</i></div><div class="model"><b>Custom Training</b><span>PyTorch · FSDP · Multi-GPU</span><i>ENGINE</i></div></div></section>
+
+    <section id="training" class="training view-section hidden"><div class="section-title"><span>TRAINING ENGINE</span><h2>From experiment to distributed training.</h2></div><div class="terminal"><div class="terminal-head"><span>● ● ●</span><span>firmai</span></div><pre>$ firmai doctor
+FIRMI AI 0.1.0
+PyTorch: 2.x
+CUDA available: true
+GPUs: ready
+
+$ torchrun --standalone --nproc_per_node=2 -m firmai.cli train
+FIRMI AI | experiment=smoke
+world_size=2 | precision=bf16
+Training environment validated.</pre></div></section>
+
+    <section id="docs" class="docs view-section hidden"><div class="section-title"><span>DOCUMENTATION</span><h2>Start small. Build the engine.</h2></div><div class="docs-grid"><div><b>01 · Frontend</b><p>FIRMI AI is currently available as a web interface in preview mode.</p></div><div><b>02 · Engine</b><p>The <code>/fimai</code> package contains the modernized distributed-training foundation.</p></div><div><b>03 · Next</b><p>Connect a suitable open-source image/video model and a GPU endpoint when ready.</p></div></div></section>
+  </main>
+
+  <footer><div class="brand"><span class="brand-mark">F</span><span>FIRMI<span class="accent">AI</span></span></div><span>Independent AI project · Built by Inácio Firmino</span><span>v0.1 preview</span></footer>
+  <script src="/fimai-site.js"></script>
+</body>
+</html>
