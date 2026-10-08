@@ -6,26 +6,27 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parent.parent
-app = FastAPI(title="FIRMI AI API", version="1.1.0")
+app = FastAPI(title="FIRMI AI API", version="1.2.0")
 app.mount("/static", StaticFiles(directory=ROOT), name="static")
 
-DEFAULT_VIDEO_MODEL = "bytedance/seedance-1-pro"
-FAST_VIDEO_MODEL = "bytedance/seedance-1-pro-fast"
+DEFAULT_VIDEO_MODEL = "google/veo-3.1"
+FAST_VIDEO_MODEL = "google/veo-3.1-fast"
 
 MODEL_ALIASES = {
     "FIRMI Video Ultra": DEFAULT_VIDEO_MODEL,
-    "FIRMI Video Pro": FAST_VIDEO_MODEL,
+    "FIRMI Video Fast": FAST_VIDEO_MODEL,
+    "FIRMI Video Studio": DEFAULT_VIDEO_MODEL,
 }
 
 class GenerateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=12000)
     model: str = Field(default="FIRMI Video Ultra", max_length=120)
-    duration: int = Field(default=5, ge=2, le=12)
+    duration: int = Field(default=8)
     aspect_ratio: str = Field(default="16:9")
     quality: str = Field(default="Ultra")
 
 def replicate(path, method="GET", payload=None):
-    token = os.getenv("REPLICATE_API_TOKEN")
+    token = os.getenv("REPLICATE_API_TOKEN", "").strip()
     if not token:
         raise HTTPException(503, "REPLICATE_API_TOKEN não configurado no servidor.")
     data = None if payload is None else json.dumps(payload).encode()
@@ -48,42 +49,43 @@ def replicate(path, method="GET", payload=None):
         raise HTTPException(502, f"Falha de ligação ao motor de vídeo: {e.reason}")
 
 def selected_model(ui_model: str) -> str:
-    # An explicit server-side model can override the default, while the UI
-    # aliases always remain valid without another Render environment variable.
     configured = os.getenv("REPLICATE_VIDEO_MODEL", "").strip()
-    if configured and "/" in configured:
+    if configured in (DEFAULT_VIDEO_MODEL, FAST_VIDEO_MODEL):
         return configured
     return MODEL_ALIASES.get(ui_model, DEFAULT_VIDEO_MODEL)
 
 @app.get("/api/health")
 def health():
+    token = bool(os.getenv("REPLICATE_API_TOKEN", "").strip())
     return {
         "ok": True,
-        "provider": "replicate" if os.getenv("REPLICATE_API_TOKEN") else "not_configured",
+        "provider": "replicate" if token else "not_configured",
         "model": os.getenv("REPLICATE_VIDEO_MODEL") or DEFAULT_VIDEO_MODEL,
+        "ready": token,
     }
 
 @app.post("/api/generate")
 def generate(body: GenerateRequest):
-    model = selected_model(body.model)
-    quality = body.quality.lower()
-    resolution = "1080p" if quality == "ultra" else "480p"
+    if body.duration not in (4, 6, 8):
+        raise HTTPException(400, "A duração deve ser 4, 6 ou 8 segundos.")
+    if body.aspect_ratio not in ("16:9", "9:16"):
+        raise HTTPException(400, "Formato suportado: 16:9 ou 9:16.")
 
-    payload = {
-        "input": {
-            "prompt": body.prompt,
-            "duration": body.duration,
-            "aspect_ratio": body.aspect_ratio,
-            "resolution": resolution,
-            "fps": 24,
-            "camera_fixed": False,
-        }
-    }
+    model = selected_model(body.model)
+    resolution = "1080p" if body.quality.lower() == "ultra" else "720p"
 
     prediction = replicate(
         "models/" + model + "/predictions",
         "POST",
-        payload,
+        {
+            "input": {
+                "prompt": body.prompt,
+                "duration": body.duration,
+                "aspect_ratio": body.aspect_ratio,
+                "resolution": resolution,
+                "generate_audio": True,
+            }
+        },
     )
     return {
         "id": prediction.get("id"),
@@ -96,11 +98,10 @@ def generate(body: GenerateRequest):
 @app.get("/api/generate/{prediction_id}")
 def generation_status(prediction_id: str):
     result = replicate("predictions/" + prediction_id)
-    output = result.get("output")
     return {
         "id": result.get("id"),
         "status": result.get("status"),
-        "output": output,
+        "output": result.get("output"),
         "error": result.get("error"),
         "urls": result.get("urls", {}),
     }
