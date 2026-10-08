@@ -5,7 +5,7 @@ qa("[data-scroll]").forEach(b=>b.onclick=()=>show(b.dataset.scroll));
 q("#menu").onclick=()=>{const n=document.querySelector("nav");n.style.display=n.style.display==="flex"?"none":"flex"};
 
 async function poll(id){
-  for(let i=0;i<90;i++){
+  for(let i=0;i<180;i++){
     await new Promise(r=>setTimeout(r,2000));
     const r=await fetch("/api/generate/"+encodeURIComponent(id));
     const data=await r.json();
