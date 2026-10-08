@@ -45,12 +45,15 @@ def generate(body: GenerateRequest):
     model = os.getenv("REPLICATE_VIDEO_MODEL")
     if not model or "/" not in model:
         raise HTTPException(503, "REPLICATE_VIDEO_MODEL não configurado (ex.: owner/model).")
+    duration = body.duration if body.duration in (4, 6, 8) else 8
+    resolution = "1080p" if body.quality.lower() == "ultra" else "720p"
     payload = {
         "input": {
             "prompt": body.prompt,
-            "duration": body.duration,
+            "duration": duration,
             "aspect_ratio": body.aspect_ratio,
-            "quality": body.quality.lower(),
+            "resolution": resolution,
+            "generate_audio": True,
         }
     }
     prediction = replicate("models/" + model + "/predictions", "POST", payload)
