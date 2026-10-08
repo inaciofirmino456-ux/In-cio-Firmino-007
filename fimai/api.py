@@ -2,10 +2,12 @@ import json, os, urllib.request, urllib.error
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parent.parent
 app = FastAPI(title="FIRMI AI API", version="1.0.0")
+app.mount("/static", StaticFiles(directory=ROOT), name="static")
 
 class GenerateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=12000)
