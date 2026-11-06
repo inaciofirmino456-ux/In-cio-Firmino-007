@@ -146,6 +146,7 @@ export async function getDailyListings(dayUtc: string) {
 export interface CryptoInstructions {
   network: string;
   asset: string;
+  rateUsd: number;
   expectedAmount: number;
   expectedUnits: string;
   decimals: number;
