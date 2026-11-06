@@ -17,13 +17,20 @@ Deno.serve(async (req: Request) => {
     const { orderId } = await req.json();
     if (typeof orderId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId)) return json({ error: "Pedido inválido." }, 400);
     const sb = adminClient();
-    const { data: order, error } = await sb.from("orders").select("id,charge_cents,status").eq("id", orderId).single();
+    const { data: order, error } = await sb.from("orders").select("id,charge_cents,status,metadata").eq("id", orderId).single();
     if (error || !order) return json({ error: "Pedido não encontrado." }, 404);
     if (order.status !== "pending") return json({ error: "Este pedido já foi processado." }, 409);
+    const savedPaypalOrderId = order.metadata?.paypal_order_id;
+    if (typeof savedPaypalOrderId === "string" && savedPaypalOrderId.length > 0) {
+      return json({ paypalOrderId: savedPaypalOrderId, amountUsd: Number(order.charge_cents) / 100 });
+    }
     const gateway = Deno.env.get("TOPBID_PAYPAL_GATEWAY_URL") || "https://if7-paypal-gateway.onrender.com";
     const response = await fetch(gateway + "/api/topbid/paypal/create-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.paypalOrderId) return json({ error: result.error || "Não foi possível iniciar o pagamento." }, response.status || 502);
+    const metadata = { ...(order.metadata || {}), paypal_order_id: result.paypalOrderId };
+    const { error: saveError } = await sb.from("orders").update({ metadata }).eq("id", orderId).eq("status", "pending");
+    if (saveError) throw saveError;
     return json({ paypalOrderId: result.paypalOrderId, amountUsd: Number(order.charge_cents) / 100 });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Erro ao iniciar pagamento." }, 400);
