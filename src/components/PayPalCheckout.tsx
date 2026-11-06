@@ -43,14 +43,12 @@ function loadSdk(clientId: string) {
 
 export default function PayPalCheckout({ orderId, onSuccess, onError }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const paypalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     let cardButtons: any;
-    let paypalButtons: any;
 
     async function setup() {
       try {
@@ -74,6 +72,7 @@ export default function PayPalCheckout({ orderId, onSuccess, onError }: Props) {
           }
         };
 
+        let cardReady = false;
         if (cardRef.current && window.paypal.FUNDING?.CARD) {
           cardButtons = window.paypal.Buttons({
             fundingSource: window.paypal.FUNDING.CARD,
@@ -82,19 +81,12 @@ export default function PayPalCheckout({ orderId, onSuccess, onError }: Props) {
             onError: () => onError("O PayPal não conseguiu processar o cartão. Tenta novamente."),
             style: { layout: "vertical", shape: "rect", label: "pay", height: 48 },
           });
-          if (await cardButtons.isEligible()) await cardButtons.render(cardRef.current);
+          if (await cardButtons.isEligible()) {
+            await cardButtons.render(cardRef.current);
+            cardReady = true;
+          }
         }
-        if (paypalRef.current) {
-          paypalButtons = window.paypal.Buttons({
-            fundingSource: window.paypal.FUNDING.PAYPAL,
-            createOrder: create,
-            onApprove: approve,
-            onError: () => onError("O PayPal não conseguiu processar o pagamento. Tenta novamente."),
-            style: { layout: "vertical", shape: "rect", label: "paypal", height: 48 },
-          });
-          if (await paypalButtons.isEligible()) await paypalButtons.render(paypalRef.current);
-        }
-        if (!cancelled) setReady(true);
+        if (!cancelled) setReady(cardReady);
       } catch (error) {
         if (!cancelled) onError(error instanceof Error ? error.message : "Não foi possível preparar o checkout.");
       } finally {
@@ -106,7 +98,6 @@ export default function PayPalCheckout({ orderId, onSuccess, onError }: Props) {
     return () => {
       cancelled = true;
       try { cardButtons?.close?.(); } catch {}
-      try { paypalButtons?.close?.(); } catch {}
     };
   }, [orderId]);
 
@@ -118,8 +109,7 @@ export default function PayPalCheckout({ orderId, onSuccess, onError }: Props) {
       </div>
       {loading && <div className="flex items-center justify-center gap-2 py-4 text-sm text-stone-500"><Loader2 size={17} className="animate-spin"/> A preparar pagamento seguro...</div>}
       <div ref={cardRef} />
-      <div ref={paypalRef} className="mt-2" />
-      {!loading && !ready && <p className="text-xs text-stone-500">O checkout não ficou disponível. Atualiza a página e tenta novamente.</p>}
+      {!loading && !ready && <p className="text-xs text-amber-700">O PayPal não disponibilizou pagamento por cartão para esta transação. A disponibilidade depende da conta comercial e da elegibilidade do comprador.</p>}
       <p className="mt-3 text-center text-[11px] text-stone-500">Pagamento protegido pelo PayPal. A opção de cartão sem conta PayPal depende da elegibilidade da transação e do país.</p>
     </div>
   );
