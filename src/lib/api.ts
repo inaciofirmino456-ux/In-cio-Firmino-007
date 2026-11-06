@@ -31,8 +31,12 @@ export async function createOrder(input: { url: string; categorySlug: string; re
   return callFunction<Order>('create-order', input);
 }
 
-export async function createDodoCheckout(orderId: string): Promise<{ checkoutUrl: string; sessionId?: string }> {
-  return callFunction<{ checkoutUrl: string; sessionId?: string }>('dodo-checkout', { orderId });
+export async function createPaypalOrder(orderId: string): Promise<{ paypalOrderId: string; amountUsd: number }> {
+  return callFunction<{ paypalOrderId: string; amountUsd: number }>('paypal-create-order', { orderId });
+}
+
+export async function capturePaypalOrder(orderId: string, paypalOrderId: string): Promise<{ status: string; listingId?: string | null }> {
+  return callFunction<{ status: string; listingId?: string | null }>('paypal-capture-order', { orderId, paypalOrderId });
 }
 
 export async function getCryptoInstructions(orderId: string, network: string, asset: string): Promise<CryptoInstructions> {
