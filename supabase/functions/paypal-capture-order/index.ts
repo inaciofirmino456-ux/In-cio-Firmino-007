@@ -17,10 +17,11 @@ Deno.serve(async (req: Request) => {
     const { orderId, paypalOrderId } = await req.json();
     if (typeof orderId !== "string" || typeof paypalOrderId !== "string" || paypalOrderId.length > 128) return json({ error: "Dados do pagamento inválidos." }, 400);
     const sb = adminClient();
-    const { data: order, error } = await sb.from("orders").select("id,charge_cents,status").eq("id", orderId).single();
+    const { data: order, error } = await sb.from("orders").select("id,charge_cents,status,metadata").eq("id", orderId).single();
     if (error || !order) return json({ error: "Pedido não encontrado." }, 404);
     if (order.status === "paid") return json({ status: "already_paid" });
     if (order.status !== "pending") return json({ error: "Este pedido não pode ser pago." }, 409);
+    if (order.metadata?.paypal_order_id && order.metadata.paypal_order_id !== paypalOrderId) return json({ error: "Esta ordem PayPal não pertence ao pedido." }, 403);
     const gateway = Deno.env.get("TOPBID_PAYPAL_GATEWAY_URL") || "https://if7-paypal-gateway.onrender.com";
     const response = await fetch(gateway + "/api/topbid/paypal/capture-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, paypalOrderId }) });
     const result = await response.json().catch(() => ({}));
