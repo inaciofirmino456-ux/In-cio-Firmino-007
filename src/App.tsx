@@ -15,6 +15,7 @@ import {
 import { supabase } from "./lib/supabase";
 import type { CategoryRecord, Listing } from "./types";
 import CryptoWalletBalance from "./components/CryptoWalletBalance";
+import PayPalCheckout from "./components/PayPalCheckout";
 
 const MIN_BID_USD = 1;
 const MAX_BID_USD = 999999;
@@ -487,27 +488,16 @@ export default function App() {
         <div className="flex items-center gap-2 font-bold"><CheckCircle2 size={18} className="text-orange-600"/> Pedido criado · {money(Math.round(order.amount*100))}</div>
         <p className="mt-2 text-sm text-stone-600">Escolha como pagar. O checkout seguro do TopBid abre com cartão, carteiras digitais e stablecoins quando disponíveis.</p>
         <CryptoWalletBalance />
-        <button
-          onClick={async () => {
-            if (!order) return;
-            setPaymentLoading("dodo");
+        <PayPalCheckout
+          key={order.id}
+          orderId={order.id}
+          onSuccess={async () => {
+            setPaymentStatus("Pagamento confirmado. O ranking foi atualizado.");
             setError("");
-            try {
-              const result = await createDodoCheckout(order.id);
-              window.location.assign(result.checkoutUrl);
-            } catch (e) {
-              setError(e instanceof Error ? e.message : "Não foi possível abrir o checkout.");
-              setPaymentLoading("");
-            }
+            await refresh();
           }}
-          disabled={paymentLoading === "dodo"}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-stone-950 px-5 py-4 font-black text-white hover:bg-stone-800 disabled:opacity-60"
-        >
-          {paymentLoading === "dodo" ? <><Loader2 className="animate-spin" size={18}/> A abrir checkout seguro...</> : <>Pagar {money(Math.round(order.amount*100))} <ExternalLink size={17}/></>}
-        </button>
-        <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4 text-xs text-stone-500">
-          O pagamento é processado pelo Dodo Payments. O TopBid só atualiza o ranking depois de receber e validar a confirmação do pagamento.
-        </div>
+          onError={(message) => setError(message)}
+        />
         {paymentStatus && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold text-green-700">{paymentStatus}</p>}
       </div>}
       <p className="mt-4 flex items-center gap-2 text-xs text-stone-500"><ShieldCheck size={14}/> Pagamentos e ranking são validados no servidor. <TrendingUp size={14}/> Dados sincronizados automaticamente.</p>
