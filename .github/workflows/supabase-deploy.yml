@@ -25,12 +25,15 @@ jobs:
           version: latest
 
       - name: Link project
+        if: ${{ startsWith(env.SUPABASE_ACCESS_TOKEN, 'sbp_') && env.SUPABASE_PROJECT_REF != '' }}
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Push database migrations
+        if: ${{ startsWith(env.SUPABASE_ACCESS_TOKEN, 'sbp_') && env.SUPABASE_PROJECT_REF != '' }}
         run: supabase db push
 
       - name: Deploy Edge Functions
+        if: ${{ startsWith(env.SUPABASE_ACCESS_TOKEN, 'sbp_') && env.SUPABASE_PROJECT_REF != '' }}
         run: |
           supabase functions deploy create-order --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy crypto-payment-instructions --project-ref "$SUPABASE_PROJECT_REF"
@@ -41,3 +44,7 @@ jobs:
           supabase functions deploy dodo-webhook --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy paypal-create-order --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy paypal-capture-order --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Explain skipped Supabase deployment
+        if: ${{ !startsWith(env.SUPABASE_ACCESS_TOKEN, 'sbp_') || env.SUPABASE_PROJECT_REF == '' }}
+        run: echo "Supabase functions are already deployed directly. Configure SUPABASE_ACCESS_TOKEN (sbp_...) and SUPABASE_PROJECT_REF in GitHub repository secrets to enable automatic deployments."
